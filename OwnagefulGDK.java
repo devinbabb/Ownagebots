@@ -1,5 +1,7 @@
 import java.awt.Color;
 import java.awt.Graphics;
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import org.rsbot.event.events.MessageEvent;
 import org.rsbot.event.listeners.MessageListener;
@@ -16,9 +18,12 @@ import org.rsbot.script.wrappers.RSGroundItem;
 import org.rsbot.script.wrappers.RSNPC;
 import org.rsbot.script.wrappers.RSObject;
 import org.rsbot.script.wrappers.RSTile;
+import org.rsbot.util.GlobalConfiguration;
+
+import javax.swing.*;
 
 @ScriptManifest(authors = "Ownageful", name = "Ownageful GDK", version = 4.1, description = "Settings in GUI.")
-public class OwnagefulGDK extends Script implements PaintListener, MessageListener {
+public class OwnagefulGDK extends Script implements MessageListener {
 
     public double version = 4.1;
     boolean nHop;
@@ -137,7 +142,7 @@ public class OwnagefulGDK extends Script implements PaintListener, MessageListen
             startATT = skills.getCurrentExp(Skills.ATTACK);
             startRNG = skills.getCurrentExp(Skills.RANGE);
             startMAG = skills.getCurrentExp(Skills.MAGIC);
-            gui = new GDK();
+            createAndWaitforGUI();
             try {
                 String rTimeTemp = WindowUtil.showInputDialog("Approximate Respawn Time (in milliseconds*) \n *1000 milliseconds = 1 second");
                 if (rTimeTemp != null) {
@@ -151,8 +156,6 @@ public class OwnagefulGDK extends Script implements PaintListener, MessageListen
                 rTime = 32000;
             }
             rTime = rTime + 5000;
-            gui.setVisible(true);
-
             while (!startScript) {
                 sleep(10);
             }
@@ -172,6 +175,28 @@ public class OwnagefulGDK extends Script implements PaintListener, MessageListen
             return false;
         }
 
+    }
+
+	private void createAndWaitforGUI() {
+        if (SwingUtilities.isEventDispatchThread()) {
+            gui = new GDK();
+            gui.setVisible(true);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                        gui = new GDK();
+                        gui.setVisible(true);
+                    }
+                });
+            } catch (InvocationTargetException ite) {
+            } catch (InterruptedException ie) {
+            }
+        }
+        sleep(100);
+        while (gui.isVisible()) {
+            sleep(100);
+        }
     }
 
     @Override
@@ -525,7 +550,7 @@ public class OwnagefulGDK extends Script implements PaintListener, MessageListen
         }
         return false;
     }
-
+/*
     public void onRepaint(Graphics g) {
         if (game.isLoggedIn()) {
             totalLoot = (((totalBone + inventory.getCount(loots[0]) - ivenBone) * prices[0])
@@ -731,7 +756,7 @@ public class OwnagefulGDK extends Script implements PaintListener, MessageListen
         }
 
     }
-
+*/
     @Override
     public void onFinish() {
         // Takes a screen shot when u stop the script.
@@ -1176,7 +1201,6 @@ public class OwnagefulGDK extends Script implements PaintListener, MessageListen
     public class GDK extends javax.swing.JFrame {
 
         public GDK() {
-
             initComponents();
         }
 
