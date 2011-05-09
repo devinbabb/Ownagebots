@@ -51,6 +51,8 @@ public class OwnagefulGDK extends Script implements MessageListener {
     int[] se = {3311, 5442, 3322, 5451};
     int[] loot = {536, 1753};
     int[] memberWorlds = {6, 9, 12, 15, 21, 22, 23, 24, 26, 27, 28, 31, 32, 36, 39, 40, 42, 44, 45, 46, 48, 51, 52, 53, 54, 56, 58};
+	int[] curePot = {179, 177, 175, 2446, 11435, 11433, 5949, 5947, 5945, 5943, 11475, 11473};
+	int curep;
     public RSTile[] toRope = new RSTile[]{new RSTile(3140, 3530), new RSTile(3147, 3538), new RSTile(3155, 3546), new RSTile(3161, 3554), new RSTile(3164, 3562)};
     public RSTile[] toPort = {new RSTile(3293, 5470), new RSTile(3289, 5462)};
     public RSTile[] toGE = {new RSTile(3199, 3429), new RSTile(3188, 3435)};
@@ -256,6 +258,31 @@ public class OwnagefulGDK extends Script implements MessageListener {
         }
 
         if (isInArea(geBoundry)) {
+	        while(combat.isPoisoned()) {
+			    bank.open();
+			    sleep(500);
+		        if(bank.isOpen()) {
+			        if(bank.getCount(curePot) < 1) {
+				        bank.close();
+				        log("poisoned so we logged out!");
+				        stopScript(true);
+			        } else {
+				        for(int i = 0; bank.getCount(curePot[i]) > 0; i++) {
+					    	curep = curePot[i];
+				        }
+				        bank.withdraw(curep, 1);
+				        sleep(200);
+				        if(inventory.contains(curep)) {
+					        bank.close();
+					        sleep(500);
+				        }
+			        }
+		        }
+		        if(inventory.contains(curep)) {
+			        inventory.getItem(curep).doClick(true);
+			        sleep(1000);
+			    }
+		   }
             if (!patt || !pstr || !panti) {
                 status = "Banking";
                 banker = objects.getNearest(782);
