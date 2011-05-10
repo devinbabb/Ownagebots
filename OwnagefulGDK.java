@@ -29,12 +29,13 @@ import java.util.Map;
  * Better loot implementation for next update(priority looting)
  */
 
-@ScriptManifest(authors = "Ownageful, Aut0r", name = "Ownageful GDK", version = 4.21, description = "Settings in GUI.")
+@ScriptManifest(authors = "Ownageful, Aut0r", name = "Ownageful GDK", version = 4.22, description = "Settings in GUI.")
 public class OwnagefulGDK extends Script implements MessageListener, PaintListener {
 
 	private boolean startScript;
 	boolean useSupers = false;
 	boolean playerCombat = false;
+	boolean running = true;
 	RSComponent i;
 	boolean useAnti = false;
 	boolean eat = false;
@@ -77,39 +78,41 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 	public int rTime;
 	String status;
 	RSNPC[] gd;
+
+	//All Loots
+	RSGroundItem allLoot;
 	int[] loots = {1249, 536, 1213, 1753, 12158, 12159, 12160, 12163, 18778};
-	String[] items = {"Dragon spear", "Dragon bones", "Rune dagger", "Green dragonhide", "Gold charm", "Green charm", "Crimson charm", "Blue charm", "Starved ancient effigy"};
-	String[] o;
-	int[] prices = new int[2];
+	String[] lootNames = {"Dragon spear", "Dragon bones", "Rune dagger", "Green dragonhide", "Gold charm", "Green charm", "Crimson charm", "Blue charm", "Starved ancient effigy"};
+
+	//Profitable Loots
+	int[] profitableLoots = {1249, 536, 1213, 1753};
+	String[] profitableLootNames = {"Dragon spear", "Dragon bones", "Rune dagger", "Green dragonhide"};
+	int[] prices = new int[4];
+
+	//Priority Looting
+	RSGroundItem priorityLoot;
+	int[] priorityLoots = {536};
+	String[] priorityLootNames = {"Dragon bones"};
+
+	//Drop if picked up.
 	public int[] drop = {229, 995, 1355, 1069, 555, 1179};
-	private long runTime;
-	private long seconds;
-	private long minutes;
-	private long hours;
 	private double profitPerSecond;
 	private int totalLoot;
-	public int startSTR, startDEF, startHP, startATT, startMAG, startRNG,
-			STRPH, DEFPH, HPPH, ATTPH, RNGPH, MAGPH, STRpr, DEFpr, HPpr, ATTpr,
-			RNGpr, MAGpr, currentSTR, currentDEF, currentHP, currentATT,
-			currentMAG, currentRNG, currentSTRLVL, currentRNGLVL,
-			currentMAGLVL, currentDEFLVL, currentHPLVL, currentATTLVL;
-	public boolean usingFood = true;
-	private boolean paintSTR = false;
-	private boolean paintATT = false;
-	private boolean paintDEF = false;
-	private boolean paintHP = false;
-	private boolean paintRNG = false;
-	private boolean paintMAG = false;
-	private long initialStartTime;
+
+	//Classes
 	private GDK gui;
+	private TimeListener timeListener;
+	private ProfitListener profitListener;
+
+	public int startSTR, startDEF, startHP, startATT, startMAG, startRNG;
+
+	public boolean usingFood = true;
 	int hp;
-	RSGroundItem groundLoot;
+
 	boolean lCharms = false;
 	boolean tabTaken;
 	int tab;
-	public int startBone, totalBone, ivenBone;
-	public int startHide, totalHide, ivenHide;
-	private Loot loot = null;
+
 	final Filter<RSNPC> DRAG_FILTER = new Filter<RSNPC>() {
 
 		public boolean accept(RSNPC npc) {
@@ -134,7 +137,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 
 	@Override
 	public boolean onStart() {
-		initialStartTime = System.currentTimeMillis();
 		if (game.isLoggedIn()) {
 			startSTR = skills.getCurrentExp(Skills.STRENGTH);
 			startDEF = skills.getCurrentExp(Skills.DEFENSE);
@@ -143,7 +145,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			startRNG = skills.getCurrentExp(Skills.RANGE);
 			startMAG = skills.getCurrentExp(Skills.MAGIC);
 			createAndWaitforGUI();
-			loot = new Loot();
 			try {
 				String rTimeTemp = WindowUtil.showInputDialog("Approximate Respawn Time (in milliseconds*) \n *1000 milliseconds = 1 second");
 				if (rTimeTemp != null) {
@@ -160,16 +161,14 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			while (!startScript) {
 				sleep(10);
 			}
-			log("Loading prices");
-			for (int b = 0; b < 2; b++) {
-				prices[b] = grandExchange.lookup(loots[b]).getGuidePrice();
+			log("Loading guide prices for profitable loots.");
+			for (int b = 0; b < 4; b++) {
+				prices[b] = grandExchange.lookup(profitableLoots[b]).getGuidePrice();
+				log(""+profitableLootNames[b]+" ["+profitableLoots[b]+"] guide price is "+prices[b]);
 			}
-			loot.lootNames = items;
 			mouse.setSpeed(random(5, 6));
-			ivenBone = inventory.getCount(loots[0]);
-			log("Set initial Bone: " + ivenBone);
-			ivenHide = inventory.getCount(loots[1]);
-			log("Set initial Hide: " + ivenHide);
+			timeListener = new TimeListener();
+			profitListener = new ProfitListener();
 			combat.setAutoRetaliate(true);
 			return true;
 		} else {
@@ -294,9 +293,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 								log("Current tab is" + tab);
 
 								tabTaken = true;
-								startBone = bank.getCount(loots[0]);
-								startHide = bank.getCount(loots[1]);
-								// startHide = bank.getCount(loots[1]);
 
 							} else {
 								if (bank.getCurrentTab() != tab) {
@@ -306,10 +302,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 							}
 
 							if (bank.depositAllExcept(vTabs)) {
-								totalBone = bank.getCount(loots[0]) - startBone - ivenBone;
-								totalHide = bank.getCount(loots[1]) - startHide - ivenHide;
-								ivenBone = 0;
-								ivenHide = 0;
 								sleep(random(1000, 2000));
 								if (eat && bank.isOpen()) {
 									while (!inventory.contains(food)) {
@@ -577,166 +569,17 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 
 	public void onRepaint(Graphics g) {
 		if (game.isLoggedIn()) {
-			totalLoot = (((totalBone + inventory.getCount(loots[0]) - ivenBone) * prices[0])
-					+ ((totalHide + inventory.getCount(loots[1]) - ivenHide) * prices[1]));
 			g.setFont(new java.awt.Font("Tahoma", 1, 10));
-			runTime = System.currentTimeMillis() - initialStartTime;
-			seconds = runTime / 1000;
-			if (seconds >= 60) {
-				minutes = seconds / 60;
-				seconds -= (minutes * 60);
-			}
-			if (minutes >= 60) {
-				hours = minutes / 60;
-				minutes -= (hours * 60);
-			}
-
-			double h = (3600 * hours) + (60 * minutes) + seconds;
-			profitPerSecond = totalLoot / h;
-			if (!paintSTR) {
-				currentSTR = skills.getCurrentExp(Skills.STRENGTH) - startSTR;
-				if (currentSTR > 0) {
-					paintSTR = true;
-				}
-			} else {
-				currentSTR = skills.getCurrentExp(Skills.STRENGTH) - startSTR;
-				float STRXPperSec = 0;
-				if ((minutes > 0 || hours > 0 || seconds > 0) && currentSTR > 0) {
-					STRXPperSec = ((float) currentSTR) / (float) (seconds + (minutes * 60) + (hours * 60 * 60));
-
-				}
-				float STRXPperMin = STRXPperSec * 60;
-				float STRXPperHour = STRXPperMin * 60;
-				currentSTRLVL = skills.getRealLevel(Skills.STRENGTH);
-				STRpr = skills.getPercentToNextLevel(Skills.STRENGTH);
-				g.setColor(new Color(255, 102, 0));
-				g.fill3DRect(187, 290, 329, 13, true);
-				g.setColor(Color.WHITE);
-				g.setFont(new java.awt.Font("Tahoma", 1, 10));
-				g.drawString("  Level: " + currentSTRLVL + "   " + " Xp Gained: " + currentSTR + "   " + "Xp/Hour: " + (int) STRXPperHour + "   " + STRpr + "%.", 190, (300));
-			}
-			if (!paintDEF) {
-				currentDEF = skills.getCurrentExp(Skills.DEFENSE) - startDEF;
-				if (currentDEF > 0) {
-					paintDEF = true;
-				}
-			} else {
-				currentDEF = skills.getCurrentExp(Skills.DEFENSE) - startDEF;
-				float DEFXPperSec = 0;
-				if ((minutes > 0 || hours > 0 || seconds > 0) && currentDEF > 0) {
-					DEFXPperSec = ((float) currentDEF) / (float) (seconds + (minutes * 60) + (hours * 60 * 60));
-				}
-				float DEFXPperMin = DEFXPperSec * 60;
-				float DEFXPperHour = DEFXPperMin * 60;
-				currentDEFLVL = skills.getRealLevel(Skills.DEFENSE);
-				DEFpr = skills.getPercentToNextLevel(Skills.DEFENSE);
-				g.setColor(new Color(102, 102, 255));
-				g.fill3DRect(187, 302, 329, 13, true);
-				g.setColor(Color.WHITE);
-				g.setFont(new java.awt.Font("Tahoma", 1, 10));
-				g.drawString("  Level: " + currentDEFLVL + "   " + " Xp Gained: " + currentDEF + "   " + "Xp/Hour: " + (int) DEFXPperHour + "   " + DEFpr + "%.", 190, (312));
-			}
-			if (!paintHP) {
-				currentHP = skills.getCurrentExp(Skills.CONSTITUTION) - startHP;
-				if (currentHP > 0) {
-					paintHP = true;
-				}
-			} else {
-				currentHP = skills.getCurrentExp(Skills.CONSTITUTION) - startHP;
-				float HPXPperSec = 0;
-				if ((minutes > 0 || hours > 0 || seconds > 0) && currentHP > 0) {
-					HPXPperSec = ((float) currentHP) / (float) (seconds + (minutes * 60) + (hours * 60 * 60));
-
-				}
-				float HPXPperMin = HPXPperSec * 60;
-				float HPXPperHour = HPXPperMin * 60;
-				currentHPLVL = skills.getRealLevel(Skills.CONSTITUTION);
-				HPpr = skills.getPercentToNextLevel(Skills.CONSTITUTION);
-				g.setColor(new Color(255, 0, 102));
-				g.fill3DRect(187, 266, 329, 13, true);
-				g.setColor(Color.WHITE);
-				g.setFont(new java.awt.Font("Tahoma", 1, 10));
-				g.drawString("  Level: " + currentHPLVL + "   " + " Xp Gained: " + currentHP + "   " + "Xp/Hour: " + (int) HPXPperHour + "   " + HPpr + "%.", 190, (276));
-			}
-			if (!paintATT) {
-				currentATT = skills.getCurrentExp(Skills.ATTACK) - startATT;
-				if (currentATT > 0) {
-					paintATT = true;
-				}
-			} else {
-				currentATT = skills.getCurrentExp(Skills.ATTACK) - startATT;
-				float ATTXPperSec = 0;
-				if ((minutes > 0 || hours > 0 || seconds > 0) && currentATT > 0) {
-					ATTXPperSec = ((float) currentATT) / (float) (seconds + (minutes * 60) + (hours * 60 * 60));
-
-				}
-				float ATTXPperMin = ATTXPperSec * 60;
-				float ATTXPperHour = ATTXPperMin * 60;
-				currentATTLVL = skills.getRealLevel(Skills.ATTACK);
-				ATTpr = skills.getPercentToNextLevel(Skills.ATTACK);
-				g.setColor(new Color(255, 51, 0));
-				g.fill3DRect(187, 278, 329, 13, true);
-				g.setColor(Color.WHITE);
-				g.setFont(new java.awt.Font("Tahoma", 1, 10));
-				g.drawString("  Level: " + currentATTLVL + "   " + " Xp Gained: " + currentATT + "   " + "Xp/Hour: " + (int) ATTXPperHour + "   " + ATTpr + "%.", 190, (288));
-
-			}
-
-			if (!paintRNG) {
-				currentRNG = skills.getCurrentExp(Skills.RANGE) - startRNG;
-				if (currentRNG > 0) {
-					paintRNG = true;
-				}
-			} else {
-				currentRNG = skills.getCurrentExp(Skills.RANGE) - startRNG;
-				float RNGXPperSec = 0;
-				if ((minutes > 0 || hours > 0 || seconds > 0) && currentRNG > 0) {
-					RNGXPperSec = ((float) currentRNG) / (float) (seconds + (minutes * 60) + (hours * 60 * 60));
-				}
-				float RNGXPperMin = RNGXPperSec * 60;
-				float RNGXPperHour = RNGXPperMin * 60;
-				currentRNGLVL = skills.getRealLevel(Skills.RANGE);
-				RNGpr = skills.getPercentToNextLevel(Skills.RANGE);
-				g.setColor(new Color(51, 153, 0));
-				g.fill3DRect(187, 314, 329, 13, true);
-				g.setColor(Color.WHITE);
-				g.setFont(new java.awt.Font("Tahoma", 1, 10));
-				g.drawString("  Level: " + currentRNGLVL + "   " + "Xp Gained: " + currentRNG + "   " + "Xp/Hour: " + (int) RNGXPperHour + "   " + RNGpr + "%.", 190, (324));
-			}
-
-			if (!paintMAG) {
-				currentMAG = skills.getCurrentExp(Skills.MAGIC) - startMAG;
-				if (currentMAG > 0) {
-					paintMAG = true;
-				}
-			} else {
-				currentMAG = skills.getCurrentExp(Skills.MAGIC) - startMAG;
-				float MAGXPperSec = 0;
-				if ((minutes > 0 || hours > 0 || seconds > 0) && currentMAG > 0) {
-					MAGXPperSec = ((float) currentMAG) / (float) (seconds + (minutes * 60) + (hours * 60 * 60));
-
-				}
-				float MAGXPperMin = MAGXPperSec * 60;
-				float MAGXPperHour = MAGXPperMin * 60;
-				currentMAGLVL = skills.getRealLevel(Skills.MAGIC);
-				MAGpr = skills.getPercentToNextLevel(Skills.MAGIC);
-				g.setColor(new Color(51, 0, 255));
-				g.fill3DRect(187, 327, 329, 12, true);
-				g.setColor(Color.WHITE);
-				g.setFont(new java.awt.Font("Tahoma", 1, 10));
-				g.drawString("  Level: " + currentMAGLVL + "   " + " Xp Gained: " + currentMAG + "   " + "Xp/Hour: " + (int) MAGXPperHour + "   " + MAGpr + "%.", 190, (337));
-
-			}
 			g.setColor(new Color(0, 0, 0, 100));
 			g.fill3DRect(3, 266, 184, 73, true);
 			g.setColor(new Color(227, 100, 45));
 			g.drawString("Ownageful GDK", 15, 277);
 			g.setColor(Color.white);
 
-			g.drawString("Time running: " + hours + ":" + minutes + ":" + seconds + ".", 15, 289);
+			g.drawString("Time running: " + timeListener.getRuntimeString(), 15, 289);
 			g.drawString("Status: " + status, 15, 301);
 			g.drawString("Total Loot: " + (int) totalLoot, 15, 313);
-			g.drawString("Loot Per Hour: " + (int) (profitPerSecond * 3600), 15, 325);
+			g.drawString("Loot Per Hour: " + timeListener.calcPerHour((long) totalLoot), 15, 325);
 
 			g.setColor(new Color(0, 0, 0, 100));
 			g.fill3DRect(3, 20, 50, 65, true);
@@ -751,30 +594,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 
 
 			g.setFont(new java.awt.Font("Tahoma", 1, 10));
-			if (paintHP) {
-				g.setColor(new Color(255, 0, 102));
-				g.drawString("Hp", 164, (276));
-			}
-			if (paintATT) {
-				g.setColor(new Color(255, 51, 0));
-				g.drawString("Att", 164, (288));
-			}
-			if (paintSTR) {
-				g.setColor(new Color(255, 102, 0));
-				g.drawString("Str", 164, (300));
-			}
-			if (paintDEF) {
-				g.setColor(new Color(102, 102, 255));
-				g.drawString("Def", 164, (312));
-			}
-			if (paintRNG) {
-				g.setColor(new Color(51, 153, 0));
-				g.drawString("Rng", 164, (324));
-			}
-			if (paintMAG) {
-				g.setColor(new Color(51, 0, 255));
-				g.drawString("Mgc", 164, (336));
-			}
 		}
 
 	}
@@ -826,25 +645,39 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				}
 			}
 		}
-		groundLoot = groundItems.getNearest(loots);
-		if (groundLoot != null) {
-			if (calc.tileOnScreen(groundLoot.getLocation())) {
+		allLoot = groundItems.getNearest(loots);
+		priorityLoot = groundItems.getNearest(priorityLoots);
+		if (allLoot != null || priorityLoot != null) {
+			if (calc.tileOnScreen(allLoot.getLocation())) {
 				if (inventory.isFull() && inventory.contains(food)) {
 					inventory.getItem(food).doAction("Eat");
 					sleep(random(600, 800));
 				}
-				for (int j = 0; j < loots.length; j++) {
-					if (groundLoot.getItem().getID() == loots[j]) {
-						groundLoot.doAction("Take " + items[j]);
-						while (getMyPlayer().isMoving()) {
-							sleep(400, 500);
+				if(priorityLoot != null) {
+					for (int j = 0; j < priorityLoots.length; j++) {
+						if (priorityLoot.getItem().getID() == priorityLoots[j]) {
+							priorityLoot.doAction("Take " + priorityLootNames[j]);
+							while (getMyPlayer().isMoving()) {
+								sleep(400, 500);
+							}
+							sleep(600, 800);
+							return 100;
 						}
-						sleep(600, 800);
-						return 100;
+					}
+				} else if (allLoot != null) {
+					for (int j = 0; j < loots.length; j++) {
+						if (allLoot.getItem().getID() == loots[j]) {
+							allLoot.doAction("Take " + lootNames[j]);
+							while (getMyPlayer().isMoving()) {
+								sleep(400, 500);
+							}
+							sleep(600, 800);
+							return 100;
+						}
 					}
 				}
 			} else {
-				walking.walkTileMM(groundLoot.getLocation());
+				walking.walkTileMM(allLoot.getLocation());
 				while (getMyPlayer().isMoving()) {
 					sleep(200, 400);
 				}
@@ -1274,99 +1107,96 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			playerCombat = true;
 		}
 	}
-
-	private class Loot {
-
-		private int[] lootIDs = loots;
-		private String[] lootNames = new String[0];
-
-		private Map<String, Integer> lootTaken = new HashMap<String, Integer>();
-
-		/**
-		 * Gets the nearest loot, based on the filter
-		 *
-		 * @return The nearest item to loot, or null if none.
-		 */
-		private RSGroundItem getLoot() {
-			return groundItems.getNearest(lootFilter);
+	private class ProfitListener implements Runnable {
+		private void sleep(int t) {
+			try {
+				Thread.sleep(t);
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
 		}
 
-		/**
-		 * Attempts to take an item.
-		 *
-		 * @param item The item to take.
-		 * @return -1 if error, 0 if taken, 1 if walked
-		 */
-		private int takeItem(RSGroundItem item) {
-			if (item == null)
-				return -1;
-			String action = "Take " + item.getItem().getName();
-			if (item.isOnScreen()) {
-				for (int i = 0; i < 5; i++) {
-					if (menu.isOpen())
-						mouse.moveRandomly(300, 500);
-					Point p = calc.tileToScreen(item.getLocation(), random(0.48, 0.52), random(0.48, 0.52), 0);
-					if (!calc.pointOnScreen(p))
-						continue;
-					mouse.move(p, 3, 3);
-					if (menu.contains(action)) {
-						if (menu.getItems()[0].contains(action)) {
-							mouse.click(true);
-							return 0;
-						} else {
-							mouse.click(false);
-							sleep(random(100, 200));
-							if (menu.doAction(action))
-								return 0;
-						}
+		public ProfitListener() {
+			new Thread(this).start();
+		}
+
+		public void run() {
+			int lastCount[] = {0, 0, 0, 0};
+			while (running) {
+				sleep(100);
+				if (isPaused()) {
+					continue;
+				}
+				for (int x = 0; x < 4; x++) {
+					if (lastCount[x] > inventory.getCount(profitableLoots[x]) && lastCount[x] != 0) {
+						totalLoot = totalLoot + prices[x];
 					}
 				}
-			} else {
-				walking.walkTileMM(walking.getClosestTileOnMap(item.getLocation()));
-				return 1;
-			}
-			return -1;
-		}
-
-		private void addItem(String name, int count) {
-			if (lootTaken.get(name) != null) {
-				int newCount = count + lootTaken.get(name);
-				lootTaken.remove(name);
-				lootTaken.put(name, newCount);
-			} else {
-				lootTaken.put(name, count);
+				for (int x = 0; x < 4; x++) {
+					lastCount[x] = inventory.getCount(profitableLoots[x]);
+				}
 			}
 		}
+	}
+	class TimeListener {
+		long startTime = 0;
+		long pausedTime = 0;
+		long pausedTemp = 0;
+		long state = 0;
 
-		private Map<String, Integer> getLootTaken() {
-			HashMap<String, Integer> m = new HashMap<String, Integer>();
-			m.putAll(lootTaken);
-			return m;
+		public TimeListener() {
+			startTime = System.currentTimeMillis();
 		}
 
-		private final Filter<RSGroundItem> lootFilter = new Filter<RSGroundItem>() {
-			public boolean accept(RSGroundItem t) {
-				//Skip if we can't hold it
-				RSItem i;
-				if (inventory.isFull() && ((i = inventory.getItem(t.getItem().getID())) == null || i.getStackSize() <= 1)) {
-					return false;
-				}
-				//Check ID/name
-				boolean good = false;
-				int id = t.getItem().getID();
-				for (int iD : lootIDs) {
-					if (iD == id)
-						good = true;
-				}
-				String name = t.getItem().getName();
-				for (String s : lootNames) {
-					if (name != null && name.toLowerCase().contains(s.toLowerCase()))
-						good = true;
-				}
-				return good;
-			}
-		};
+		public long getMillis() {
+			return System.currentTimeMillis() - startTime - pausedTime;
+		}
 
+		public long getSeconds() {
+			return this.getMillis() / 1000;
+		}
+
+		public long getMinutes() {
+			return this.getSeconds() / 60;
+		}
+
+		public long getHours() {
+			return this.getMinutes() / 60;
+		}
+
+		public String getRuntimeString() {
+			final long HoursRan = this.getHours();
+			long MinutesRan = this.getMinutes();
+			long SecondsRan = this.getSeconds();
+			MinutesRan = MinutesRan % 60;
+			SecondsRan = SecondsRan % 60;
+			return HoursRan + ":" + MinutesRan + ":" + SecondsRan;
+		}
+
+		public void setPaused() {
+			state = 1;
+			pausedTemp = System.currentTimeMillis();
+		}
+
+		public long setResumed() {
+			state = 0;
+			return (pausedTime += (System.currentTimeMillis() - pausedTemp));
+		}
+
+		public long calcPerHour(final long i) {
+			return calcPerHour((double) i);
+		}
+
+		public long calcPerHour(final double i) {
+			final double elapsed_millis = this.getMillis();
+			return (long) ((i / elapsed_millis) * 3600000);
+		}
+
+		public double calcPerSecond(final long i) {
+			final double expToDouble = i;
+			final double elapsed_millis = this.getMillis();
+			return (expToDouble / elapsed_millis) * 1000;
+		}
 	}
 
 	public class GDK extends javax.swing.JFrame {
