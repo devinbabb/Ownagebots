@@ -13,21 +13,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * http://github.com/RSBot/GDK
  * Version 4.2 Update: Aut0r
  * Patch to kinda do something for poisoned players when attacked in wild.
  * Patched so gui would operate in new bot update.
+ * <p/>
+ * Version 4.21 Update Aut0r
+ * Added Loot class
+ * Changed some variables for future use.
+ * Added playerCombat in messageListener.
+ * Better loot implementation for next update(priority looting)
  */
 
-@ScriptManifest(authors = "Ownageful, Aut0r", name = "Ownageful GDK", version = 4.2, description = "Settings in GUI.")
+@ScriptManifest(authors = "Ownageful, Aut0r", name = "Ownageful GDK", version = 4.21, description = "Settings in GUI.")
 public class OwnagefulGDK extends Script implements MessageListener, PaintListener {
 
-	public double version = 4.1;
-	boolean nHop;
 	private boolean startScript;
 	boolean useSupers = false;
+	boolean playerCombat = false;
 	RSComponent i;
 	boolean useAnti = false;
 	boolean eat = false;
@@ -48,18 +55,13 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 	int[] sw = {3299, 5443, 3309, 5455};
 	int[] ne = {3311, 5452, 3322, 5464};
 	int[] se = {3311, 5442, 3322, 5451};
-	int[] loot = {536, 1753};
-	int[] memberWorlds = {6, 9, 12, 15, 21, 22, 23, 24, 26, 27, 28, 31, 32, 36, 39, 40, 42, 44, 45, 46, 48, 51, 52, 53, 54, 56, 58};
 	int[] curePot = {179, 177, 175, 2446, 11435, 11433, 5949, 5947, 5945, 5943, 11475, 11473};
 	int curep;
 	public RSTile[] toRope = new RSTile[]{new RSTile(3140, 3530), new RSTile(3147, 3538), new RSTile(3155, 3546), new RSTile(3161, 3554), new RSTile(3164, 3562)};
 	public RSTile[] toPort = {new RSTile(3293, 5470), new RSTile(3289, 5462)};
 	public RSTile[] toGE = {new RSTile(3199, 3429), new RSTile(3188, 3435)};
 	public RSTile[] toDitch = {new RSTile(3183, 3448), new RSTile(3171, 3456), new RSTile(3156, 3463), new RSTile(3141, 3466), new RSTile(3134, 3478), new RSTile(3136, 3492), new RSTile(3136, 3506), new RSTile(3138, 3520)};
-	int holeAnim = 2599;
-	int ditchAnim = 6132;
 	public int ditch = 1440;
-	public int hole = 9312;
 	public int rope = 28892;
 	public RSTile portal = new RSTile(3290, 5463);
 	final int[] strengthPots = {2440, 157, 159, 161};
@@ -75,12 +77,11 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 	public int rTime;
 	String status;
 	RSNPC[] gd;
-	int[] loots = {536, 1753};
-	String[] names = {"Dragon bones", "Green dragonhide"};
+	int[] loots = {1249, 536, 1213, 1753, 12158, 12159, 12160, 12163, 18778};
+	String[] items = {"Dragon spear", "Dragon bones", "Rune dagger", "Green dragonhide", "Gold charm", "Green charm", "Crimson charm", "Blue charm", "Starved ancient effigy"};
+	String[] o;
 	int[] prices = new int[2];
-	public int[] charms = {12158, 12159, 12160, 12161, 12162, 12163, 12164, 12165, 12166, 12167};
 	public int[] drop = {229, 995, 1355, 1069, 555, 1179};
-	int profit;
 	private long runTime;
 	private long seconds;
 	private long minutes;
@@ -100,16 +101,15 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 	private boolean paintRNG = false;
 	private boolean paintMAG = false;
 	private long initialStartTime;
-	private int bankRuns;
 	private GDK gui;
 	int hp;
-	RSGroundItem charmz;
-	RSGroundItem lootzd;
+	RSGroundItem groundLoot;
 	boolean lCharms = false;
 	boolean tabTaken;
 	int tab;
 	public int startBone, totalBone, ivenBone;
 	public int startHide, totalHide, ivenHide;
+	private Loot loot = null;
 	final Filter<RSNPC> DRAG_FILTER = new Filter<RSNPC>() {
 
 		public boolean accept(RSNPC npc) {
@@ -143,6 +143,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			startRNG = skills.getCurrentExp(Skills.RANGE);
 			startMAG = skills.getCurrentExp(Skills.MAGIC);
 			createAndWaitforGUI();
+			loot = new Loot();
 			try {
 				String rTimeTemp = WindowUtil.showInputDialog("Approximate Respawn Time (in milliseconds*) \n *1000 milliseconds = 1 second");
 				if (rTimeTemp != null) {
@@ -163,6 +164,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			for (int b = 0; b < 2; b++) {
 				prices[b] = grandExchange.lookup(loots[b]).getGuidePrice();
 			}
+			loot.lootNames = items;
 			mouse.setSpeed(random(5, 6));
 			ivenBone = inventory.getCount(loots[0]);
 			log("Set initial Bone: " + ivenBone);
@@ -207,13 +209,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				inventory.getItem(drop[i]).doAction("Drop");
 			}
 		}
-
-		if (!lCharms) {
-			if (inventory.containsOneOf(charms)) {
-				inventory.getItem(charms).doAction("Drop");
-			}
-		}
-
 
 		camera.setPitch(true);
 		if (walking.getEnergy() > random(20, 40)) {
@@ -433,7 +428,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			}
 		} else if (isInArea(wildBoundry)) {
 			try {
-				if (getMyPlayer().getInteracting() != null) {
+				if (getMyPlayer().getInteracting() != null || playerCombat) {
 					RSCharacter npc1 = getMyPlayer().getInteracting();
 					if (npc1 != null && npc1.getName().contains("Thug")) {
 						npc1.doAction("Attack");
@@ -442,6 +437,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 					} else {
 						log("Getting attacked by player!");
 						inventory.getItem(vTabs).doClick(true);
+						playerCombat = false;
 						sleep(200, 400);
 					}
 				}
@@ -471,8 +467,8 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				}
 			} else {
 				walkPath(toRope);
-
 			}
+			sleep(750, 1250);
 		} else if (isInArea(dung1Boundry)) {
 			antiban();
 			status = "Walking to portal";
@@ -741,8 +737,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			g.drawString("Status: " + status, 15, 301);
 			g.drawString("Total Loot: " + (int) totalLoot, 15, 313);
 			g.drawString("Loot Per Hour: " + (int) (profitPerSecond * 3600), 15, 325);
-			g.drawString("Bank Runs: " + bankRuns + " times.", 15, 337);
-
 
 			g.setColor(new Color(0, 0, 0, 100));
 			g.fill3DRect(3, 20, 50, 65, true);
@@ -806,7 +800,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				inventory.getItem(vTabs).doAction("Break");
 			} catch (NullPointerException e) {
 				log("Out of varrock teleport.");
-				stopScript();
+				stopScript(true);
 			}
 			sleep(random(7000, 8500));
 			walking.walkTileMM(new RSTile(3208, 3435));
@@ -832,6 +826,32 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				}
 			}
 		}
+		groundLoot = groundItems.getNearest(loots);
+		if (groundLoot != null) {
+			if (calc.tileOnScreen(groundLoot.getLocation())) {
+				if (inventory.isFull() && inventory.contains(food)) {
+					inventory.getItem(food).doAction("Eat");
+					sleep(random(600, 800));
+				}
+				for (int j = 0; j < loots.length; j++) {
+					if (groundLoot.getItem().getID() == loots[j]) {
+						groundLoot.doAction("Take " + items[j]);
+						while (getMyPlayer().isMoving()) {
+							sleep(400, 500);
+						}
+						sleep(600, 800);
+						return 100;
+					}
+				}
+			} else {
+				walking.walkTileMM(groundLoot.getLocation());
+				while (getMyPlayer().isMoving()) {
+					sleep(200, 400);
+				}
+				return 100;
+			}
+		}
+		/*
 		if (lCharms) {
 			charmz = groundItems.getNearest(charms);
 			if (charmz != null) {
@@ -854,7 +874,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				}
 			}
 		}
-		lootzd = groundItems.getNearest(loots);
 		if (lootzd != null) {
 			if (calc.tileOnScreen(lootzd.getLocation())) {
 				if (inventory.isFull() && inventory.contains(food)) {
@@ -879,7 +898,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				return 100;
 			}
 		}
-
+         */
 		RSCharacter inter = getMyPlayer().getInteracting();
 		if (inter != null) {
 			if (inter.getName().contains("Green")) {
@@ -1026,6 +1045,30 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 		}
 		return random(1000, 1500);
 
+	}
+
+	/**
+	 * Waits until we are no longer moving.
+	 */
+	private void waitWhileMoving() {
+		long start = System.currentTimeMillis();
+		while (System.currentTimeMillis() - start < 1500 && !getMyPlayer().isMoving()) {
+			sleep(random(50, 200));
+		}
+		while (getMyPlayer().isMoving()) {
+			sleep(random(20, 50));
+		}
+	}
+
+	/**
+	 * Waits until the inventory count changes
+	 */
+	private boolean waitForInvChange(int origCount) {
+		long start = System.currentTimeMillis();
+		while (inventory.getCount(true) == origCount && System.currentTimeMillis() - start < 2000) {
+			sleep(random(20, 70));
+		}
+		return inventory.getCount(true) != origCount;
 	}
 
 	private void goTArea(int[] a) {
@@ -1227,6 +1270,103 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 		if (str.contains("unknown portal")) {
 			ntele = true;
 		}
+		if (str.contains("You have been frozen!")) {
+			playerCombat = true;
+		}
+	}
+
+	private class Loot {
+
+		private int[] lootIDs = loots;
+		private String[] lootNames = new String[0];
+
+		private Map<String, Integer> lootTaken = new HashMap<String, Integer>();
+
+		/**
+		 * Gets the nearest loot, based on the filter
+		 *
+		 * @return The nearest item to loot, or null if none.
+		 */
+		private RSGroundItem getLoot() {
+			return groundItems.getNearest(lootFilter);
+		}
+
+		/**
+		 * Attempts to take an item.
+		 *
+		 * @param item The item to take.
+		 * @return -1 if error, 0 if taken, 1 if walked
+		 */
+		private int takeItem(RSGroundItem item) {
+			if (item == null)
+				return -1;
+			String action = "Take " + item.getItem().getName();
+			if (item.isOnScreen()) {
+				for (int i = 0; i < 5; i++) {
+					if (menu.isOpen())
+						mouse.moveRandomly(300, 500);
+					Point p = calc.tileToScreen(item.getLocation(), random(0.48, 0.52), random(0.48, 0.52), 0);
+					if (!calc.pointOnScreen(p))
+						continue;
+					mouse.move(p, 3, 3);
+					if (menu.contains(action)) {
+						if (menu.getItems()[0].contains(action)) {
+							mouse.click(true);
+							return 0;
+						} else {
+							mouse.click(false);
+							sleep(random(100, 200));
+							if (menu.doAction(action))
+								return 0;
+						}
+					}
+				}
+			} else {
+				walking.walkTileMM(walking.getClosestTileOnMap(item.getLocation()));
+				return 1;
+			}
+			return -1;
+		}
+
+		private void addItem(String name, int count) {
+			if (lootTaken.get(name) != null) {
+				int newCount = count + lootTaken.get(name);
+				lootTaken.remove(name);
+				lootTaken.put(name, newCount);
+			} else {
+				lootTaken.put(name, count);
+			}
+		}
+
+		private Map<String, Integer> getLootTaken() {
+			HashMap<String, Integer> m = new HashMap<String, Integer>();
+			m.putAll(lootTaken);
+			return m;
+		}
+
+		private final Filter<RSGroundItem> lootFilter = new Filter<RSGroundItem>() {
+			public boolean accept(RSGroundItem t) {
+				//Skip if we can't hold it
+				RSItem i;
+				if (inventory.isFull() && ((i = inventory.getItem(t.getItem().getID())) == null || i.getStackSize() <= 1)) {
+					return false;
+				}
+				//Check ID/name
+				boolean good = false;
+				int id = t.getItem().getID();
+				for (int iD : lootIDs) {
+					if (iD == id)
+						good = true;
+				}
+				String name = t.getItem().getName();
+				for (String s : lootNames) {
+					if (name != null && name.toLowerCase().contains(s.toLowerCase()))
+						good = true;
+				}
+				return good;
+			}
+		};
+
 	}
 
 	public class GDK extends javax.swing.JFrame {
