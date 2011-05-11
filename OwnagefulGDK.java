@@ -13,8 +13,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * http://github.com/RSBot/GDK
@@ -96,7 +94,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 
 	//Drop if picked up.
 	public int[] drop = {229, 995, 1355, 1069, 555, 1179};
-	private double profitPerSecond;
 	private int totalLoot;
 
 	//Classes
@@ -164,7 +161,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			log("Loading guide prices for profitable loots.");
 			for (int b = 0; b < 4; b++) {
 				prices[b] = grandExchange.lookup(profitableLoots[b]).getGuidePrice();
-				log(""+profitableLootNames[b]+" ["+profitableLoots[b]+"] guide price is "+prices[b]);
+				log("" + profitableLootNames[b] + " [" + profitableLoots[b] + "] guide price is " + prices[b]);
 			}
 			mouse.setSpeed(random(5, 6));
 			timeListener = new TimeListener();
@@ -520,20 +517,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 		}
 	}
 
-	private boolean itemIsInArea(int[] xy, RSGroundItem t) {
-		try {
-			final int x = t.getLocation().getX();
-			final int y = t.getLocation().getY();
-			if (x >= xy[0] && x <= xy[2] && y >= xy[1] && y <= xy[3]) {
-				return true;
-			} else {
-				return false;
-			}
-		} catch (NullPointerException e) {
-			return false;
-		}
-	}
-
 	public int gap(int[] pots) {
 		if (bank.isOpen()) {
 			if (bank.getCount(pots[0]) > 0) {
@@ -601,6 +584,8 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 	@Override
 	public void onFinish() {
 		// Takes a screen shot when u stop the script.
+		running = false;
+		profitListener.kill();
 		env.saveScreenshot(true);
 		super.stopScript();
 	}
@@ -653,7 +638,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 					inventory.getItem(food).doAction("Eat");
 					sleep(random(600, 800));
 				}
-				if(priorityLoot != null) {
+				if (priorityLoot != null) {
 					for (int j = 0; j < priorityLoots.length; j++) {
 						if (priorityLoot.getItem().getID() == priorityLoots[j]) {
 							priorityLoot.doAction("Take " + priorityLootNames[j]);
@@ -684,54 +669,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				return 100;
 			}
 		}
-		/*
-		if (lCharms) {
-			charmz = groundItems.getNearest(charms);
-			if (charmz != null) {
-				if (calc.tileOnScreen(charmz.getLocation())) {
-					if (inventory.isFull() && inventory.contains(food) && !inventory.contains(charmz.getItem().getID())) {
-						inventory.getItem(food).doAction("Eat");
-						sleep(random(100, 300));
-					}
-					charmz.doAction("charm");
-					while (getMyPlayer().isMoving()) {
-						sleep(200, 400);
-					}
-					return 100;
-				} else {
-					walking.walkTileMM(charmz.getLocation());
-					while (getMyPlayer().isMoving()) {
-						sleep(200, 400);
-					}
-					return 100;
-				}
-			}
-		}
-		if (lootzd != null) {
-			if (calc.tileOnScreen(lootzd.getLocation())) {
-				if (inventory.isFull() && inventory.contains(food)) {
-					inventory.getItem(food).doAction("Eat");
-					sleep(random(600, 800));
-				}
-				for (int j = 0; j < loots.length; j++) {
-					if (lootzd.getItem().getID() == loots[j]) {
-						lootzd.doAction("Take " + names[j]);
-						while (getMyPlayer().isMoving()) {
-							sleep(400, 500);
-						}
-						sleep(600, 800);
-						return 100;
-					}
-				}
-			} else {
-				walking.walkTileMM(lootzd.getLocation());
-				while (getMyPlayer().isMoving()) {
-					sleep(200, 400);
-				}
-				return 100;
-			}
-		}
-         */
 		RSCharacter inter = getMyPlayer().getInteracting();
 		if (inter != null) {
 			if (inter.getName().contains("Green")) {
@@ -878,30 +815,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 		}
 		return random(1000, 1500);
 
-	}
-
-	/**
-	 * Waits until we are no longer moving.
-	 */
-	private void waitWhileMoving() {
-		long start = System.currentTimeMillis();
-		while (System.currentTimeMillis() - start < 1500 && !getMyPlayer().isMoving()) {
-			sleep(random(50, 200));
-		}
-		while (getMyPlayer().isMoving()) {
-			sleep(random(20, 50));
-		}
-	}
-
-	/**
-	 * Waits until the inventory count changes
-	 */
-	private boolean waitForInvChange(int origCount) {
-		long start = System.currentTimeMillis();
-		while (inventory.getCount(true) == origCount && System.currentTimeMillis() - start < 2000) {
-			sleep(random(20, 70));
-		}
-		return inventory.getCount(true) != origCount;
 	}
 
 	private void goTArea(int[] a) {
@@ -1073,19 +986,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 		}
 	}
 
-	private boolean attackedByPlayer() {
-		RSNPC[] thugs = npcs.getAll(thugFilter);
-		for (int j = 0; j < thugs.length; j++) {
-			log("Thug : " + j);
-			if (thugs[j].getInteracting() != null) {
-				if (thugs[j].getInteracting().getName().equals(getMyPlayer().getName())) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
 	public void messageReceived(MessageEvent sme) {
 		String str = sme.getMessage().toString();
 		if (str.contains("super strength")) {
@@ -1107,6 +1007,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			playerCombat = true;
 		}
 	}
+
 	private class ProfitListener implements Runnable {
 		private void sleep(int t) {
 			try {
@@ -1118,6 +1019,10 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 
 		public ProfitListener() {
 			new Thread(this).start();
+		}
+
+		public void kill() {
+			Thread.currentThread().interrupt();
 		}
 
 		public void run() {
@@ -1138,11 +1043,11 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			}
 		}
 	}
+
 	class TimeListener {
 		long startTime = 0;
 		long pausedTime = 0;
-		long pausedTemp = 0;
-		long state = 0;
+
 
 		public TimeListener() {
 			startTime = System.currentTimeMillis();
@@ -1173,16 +1078,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			return HoursRan + ":" + MinutesRan + ":" + SecondsRan;
 		}
 
-		public void setPaused() {
-			state = 1;
-			pausedTemp = System.currentTimeMillis();
-		}
-
-		public long setResumed() {
-			state = 0;
-			return (pausedTime += (System.currentTimeMillis() - pausedTemp));
-		}
-
 		public long calcPerHour(final long i) {
 			return calcPerHour((double) i);
 		}
@@ -1192,11 +1087,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 			return (long) ((i / elapsed_millis) * 3600000);
 		}
 
-		public double calcPerSecond(final long i) {
-			final double expToDouble = i;
-			final double elapsed_millis = this.getMillis();
-			return (expToDouble / elapsed_millis) * 1000;
-		}
 	}
 
 	public class GDK extends javax.swing.JFrame {
@@ -1329,14 +1219,6 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 		}
 
 		private void jTextField2MouseClicked(java.awt.event.MouseEvent evt) {
-			jTextField2.setText("");
-		}
-
-		private void jTextField1MouseEntered(java.awt.event.MouseEvent evt) {
-			jTextField1.setText("");
-		}
-
-		private void jTextField2MouseEntered(java.awt.event.MouseEvent evt) {
 			jTextField2.setText("");
 		}
 
