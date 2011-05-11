@@ -1,8 +1,3 @@
-/**
- * Authors: Ownageful & Aut0r
- *
- */
-
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -87,7 +82,6 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
     }
     @Override
     public int loop() {
-        teleport();
         return 100;
     }
     private boolean needToTele() {
@@ -133,6 +127,9 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
         }
         return false;
     }
+    private boolean isInDungeon() {
+        return (Math.floor(getMyPlayer().getLocation().getY() / 1000) == 4.0);
+    }
     private void calculatePrices() {
         Thread priceThread = new Thread() {
             @Override
@@ -159,22 +156,16 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
         }
         log("Teleported succesfully");
     }
-    	public int gap(int[] pots) {
-		if (bank.isOpen()) {
-			if (bank.getCount(pots[0]) > 0) {
-				return pots[0];
-			} else if (bank.getCount(pots[1]) > 0) {
-				return pots[1];
-			} else if (bank.getCount(pots[2]) > 0) {
-				return pots[2];
-			} else if (bank.getCount(pots[3]) > 0) {
-				return pots[3];
-			}
-		} else {
-			return 0;
-		}
-		return 0;
-	}
+    public int gap(int[] pots) {
+        if (bank.isOpen()) {
+            for (int i = 0; i < 4; i++) {
+                if (bank.getCount(pots[i]) > 0) {
+                    return pots[i];
+                }
+            }
+        }
+        return 0;
+    }
     public void onRepaint(Graphics grphcs) {
     }
     public void messageReceived(MessageEvent me) {
@@ -287,7 +278,7 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
             jLabel8.setForeground(new java.awt.Color(0, 51, 255));
             jLabel8.setText("Summoning: (please have summoning potions in bank if using BoB) ");
             jCheckBox7.setText("Beast of Burden:");
-            jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Bull Ant", "TerrorBird", "War Tortoise","Pack Yak"}));
+            jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Bull Ant", "TerrorBird", "War Tortoise", "Pack Yak"}));
             jLabel9.setForeground(new java.awt.Color(255, 0, 0));
             jLabel9.setText("Looting:");
             jLabel10.setForeground(new java.awt.Color(255, 0, 255));
@@ -360,7 +351,6 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
             if (!error) {
                 this.dispose();
             }
-
         }
         private javax.swing.JButton jButton1;
         private javax.swing.JCheckBox jCheckBox1;
