@@ -123,7 +123,6 @@ public class AutoBDKPro extends Script implements PaintListener,
         new RSTile(2934, 9792), new RSTile(2932, 9796),
         new RSTile(2930, 9799), new RSTile(2928, 9802),
         new RSTile(2924, 9803)};
-
     private transient final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
 
         @Override
@@ -133,6 +132,18 @@ public class AutoBDKPro extends Script implements PaintListener,
                         && !npc.isInCombat()
                         && npc.getInteracting() != getMyPlayer()
                         && npc.getAnimation() == -1 && !npc.isInteractingWithLocalPlayer());
+            } catch (NullPointerException e) {
+                return false;
+            }
+        }
+    };
+    private transient final Filter<RSNPC> filt2 = new Filter<RSNPC>() {
+
+        @Override
+        public boolean accept(RSNPC npc) {
+            try {
+                return (npc.getName().equalsIgnoreCase("Blue dragon")
+                        && !npc.isInCombat());
             } catch (NullPointerException e) {
                 return false;
             }
@@ -719,7 +730,7 @@ public class AutoBDKPro extends Script implements PaintListener,
         if (nanti) {
             if (inventory.containsOneOf(antiPots[0], antiPots[1], antiPots[2], antiPots[3])) {
                 if (inventory.getItem(antiPots).doAction("Drink")) {
-                    sleep(random(3900,3950));
+                    sleep(random(3900, 3950));
                     nanti = false;
                     return 20;
                 }
@@ -861,7 +872,7 @@ public class AutoBDKPro extends Script implements PaintListener,
                     }
                 }
             } else {
-                drag = npcs.getNearest(filt1);
+                drag = npcs.getNearest(filt2);
                 if (drag != null) {
                     if (drag.isOnScreen()) {
                         drag.doAction("Attack");
