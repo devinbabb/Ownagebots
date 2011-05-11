@@ -1,5 +1,4 @@
 
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -29,15 +28,11 @@ import org.rsbot.script.wrappers.RSNPC;
 import org.rsbot.script.wrappers.RSObject;
 import org.rsbot.script.wrappers.RSTile;
 
-
-// adding long path
 @ScriptManifest(authors = {"Ownageful"}, name = "Ownageful's Blue Dragon Killer Pro", version = 1.0, description = "BDK Pro")
 public class AutoBDKPro extends Script implements PaintListener,
         MessageListener, MouseListener {
 
     public long startTime = System.currentTimeMillis();
-    private int[] totravladderboundary = {2934, 3355, 2879, 3402};
-    private int[] atbluedragonsboundary = {3914, 9796, 2901, 9820};
     public int agility1 = 11844;
     public int fallytab = 8009, storedHides = 0, storedBones = 0;
     private int[] loots = {536, 1751, 985, 1213, 1163, 18778};
@@ -57,7 +52,6 @@ public class AutoBDKPro extends Script implements PaintListener,
     private boolean lootHide, lootBones;
     private int eatAt = -1;
     private boolean nBank = false;
-    private int x = -1, y = -1;
     private int tab, ptab = 1;
     public int[] drop = {229, 995, 1355, 1069, 555, 1179};
     private int dusty = 1590;
@@ -66,6 +60,7 @@ public class AutoBDKPro extends Script implements PaintListener,
     private boolean dungeon = false;
     private boolean dPots = false, rPots = false, cPots = false, dAnti = false, lCharms = false, useSummon = false;
     private int food, withdraw;
+    private RSTile center = new RSTile(2902, 9803);
     private RSGroundItem charmz;
     private RSGroundItem lootzd;
     private Timer tm = new Timer(0);
@@ -128,22 +123,7 @@ public class AutoBDKPro extends Script implements PaintListener,
         new RSTile(2934, 9792), new RSTile(2932, 9796),
         new RSTile(2930, 9799), new RSTile(2928, 9802),
         new RSTile(2924, 9803)};
-//    final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
-//
-//        public boolean accept(RSNPC npc) {
-//            if (npc != null) {
-//                try {
-//                    if (npc.getName().equals("Blue dragon")
-//                            && !npc.isInCombat()) {
-//                        return true;
-//                    }
-//                } catch (NullPointerException e) {
-//                    return false;
-//                }
-//            }
-//            return false;
-//        }
-//    };
+
     private transient final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
 
         @Override
@@ -266,7 +246,7 @@ public class AutoBDKPro extends Script implements PaintListener,
         } else if (isInArea(bankBoundry)) {
             stat = "Banking";
             if (inventory.contains(fallytab) && inventory.contains(food)
-                    && !inventory.contains(1751) && !inventory.contains(536)) {
+                    && !inventory.contains(1751) && !inventory.contains(536) && (!useSummon || (useSummon && inventory.contains(finalPouch)))) {
                 stat = "Walking to wall";
                 walking.walkTo(walking.getPath(new RSTile(2939, 3356)).getNext());
             } else {
@@ -293,7 +273,6 @@ public class AutoBDKPro extends Script implements PaintListener,
                             }
                             if (bank.depositAllExcept(fallytab, finalPouch)) {
                                 bank.depositAllFamiliar();
-                                bank.depositAllFamiliar();
                                 storedBones = 0;
                                 storedHides = 0;
                                 summonFull = false;
@@ -309,6 +288,7 @@ public class AutoBDKPro extends Script implements PaintListener,
                                             openBankTab(tab);
                                             sleep(random(2000, 3000));
                                         }
+
                                         bank.withdraw(food, withdraw);
                                         sleep(random(800, 1000));
                                     }
@@ -418,20 +398,18 @@ public class AutoBDKPro extends Script implements PaintListener,
             } else {
                 walking.walkPathMM(agilitysctotravdung);
             }
-        } else if (isInArea(new int[]{2881, 9794, 2887, 9801})) {
-            if (shortcut) {
-                RSObject h = objects.getNearest(9293);
-                if (h != null) {
-                    if (h.isOnScreen()) {
-                        h.doAction("Squeeze");
-                        sleep(random(3000, 4000));
-                        waitToMove();
-                    } else {
-                        camera.turnToObject(h);
-                    }
+        } else if (isInArea(new int[]{2881, 9794, 2887, 9801}) && shortcut) {
+            RSObject h = objects.getNearest(9293);
+            if (h != null) {
+                if (h.isOnScreen()) {
+                    h.doAction("Squeeze");
+                    sleep(random(3000, 4000));
+                    waitToMove();
+                } else {
+                    camera.turnToObject(h);
                 }
             }
-        } else if (isInArea(new int[]{2889, 9793, 2923, 9813})) {
+        } else if (isInArea(new int[]{2889, 9793, 2924, 9813})) {
             stat = "Fighting drags";
             if (dungeon) {
                 RSObject d = objects.getNearest(52852);
@@ -453,13 +431,14 @@ public class AutoBDKPro extends Script implements PaintListener,
         } else if ((Math.floor(getMyPlayer().getLocation().getY() / 1000) == 4.0)) {
             fight();
         } else if (!shortcut && !isInArea(new int[]{2889, 9793, 2923, 9813})) {
+            log("We are where we wanna be");
             RSObject gate = objects.getNearest(2623);
             if (gate == null) {
-                walking.walkPathMM(walktodungeon);
-                sleep(random(600, 700));
+                walking.walkPathMM(LADDERS_TO_GATE_ENTRANCE);
+                sleep(random(1200, 1300));
             } else if (!gate.isOnScreen()) {
-                walking.walkPathMM(walktodungeon);
-                sleep(random(600, 700));
+                walking.walkPathMM(LADDERS_TO_GATE_ENTRANCE);
+                sleep(random(1200, 1300));
             } else {
                 camera.turnToObject(gate);
                 RSItem key = inventory.getItem(dusty);
@@ -740,7 +719,7 @@ public class AutoBDKPro extends Script implements PaintListener,
         if (nanti) {
             if (inventory.containsOneOf(antiPots[0], antiPots[1], antiPots[2], antiPots[3])) {
                 if (inventory.getItem(antiPots).doAction("Drink")) {
-                    sleep(random(3500, 3900));
+                    sleep(random(3900,3950));
                     nanti = false;
                     return 20;
                 }
@@ -766,7 +745,7 @@ public class AutoBDKPro extends Script implements PaintListener,
             if (getMyPlayer().getHPPercent() < (random(eatAt - 5, eatAt + 5))) {
                 if (inventory.contains(food)) {
                     inventory.getItem(food).doAction("Eat");
-                    sleep(random(3500, 3900));
+                    sleep(random(3900, 3950));
                     return 100;
                 } else {
                     inventory.getItem(fallytab).doAction("Break");
@@ -870,41 +849,65 @@ public class AutoBDKPro extends Script implements PaintListener,
             }
         }
 
-        RSCharacter inter = getMyPlayer().getInteracting();
-        if (inter != null) {
-            if (inter.getName().equals("Blue dragon")) {
-                if (inter.getAnimation() == 12250) {
-                    sleep(random(3900, 4500));
-                    return 100;
-                } else {
-                    sleep(random(200, 300));
-                }
-            }
-        } else {
-            drag = npcs.getNearest(filt1);
-            if (drag != null) {
-                if (drag.isOnScreen()) {
-                    drag.doAction("Attack");
-                    sleep(random(1500, 2000));
-                    while (getMyPlayer().isMoving()) {
-                        sleep(200, 400);
-                    }
-                } else {
-                    walking.walkTileMM(drag.getLocation());
-                    sleep(random(600, 700));
-                    while (getMyPlayer().isMoving()) {
-                        sleep(200, 400);
+        if (dungeon) {
+            RSCharacter inter = getMyPlayer().getInteracting();
+            if (inter != null) {
+                if (inter.getName().equals("Blue dragon")) {
+                    if (inter.getAnimation() == 12250) {
+                        sleep(random(3900, 4500));
+                        return 100;
+                    } else {
+                        sleep(random(200, 300));
                     }
                 }
             } else {
-                if (dungeon) {
-                    walking.walkPathMM(centerDung);
-                    sleep(random(600, 700));
+                drag = npcs.getNearest(filt1);
+                if (drag != null) {
+                    if (drag.isOnScreen()) {
+                        drag.doAction("Attack");
+                        sleep(random(1500, 2000));
+                        while (getMyPlayer().isMoving()) {
+                            sleep(200, 400);
+                        }
+                    } else {
+                        walking.walkTileMM(drag.getLocation());
+                        sleep(random(600, 700));
+                        while (getMyPlayer().isMoving()) {
+                            sleep(200, 400);
+                        }
+                    }
+                } else {
+                    if (dungeon) {
+                        walking.walkPathMM(centerDung);
+                        sleep(random(600, 700));
+                    }
+                }
+                return 10;
+            }
+            return 10;
+        } else {
+            RSNPC blueDragon = npcs.getNearest(filt1);
+            if (!getMyPlayer().isInCombat() && getMyPlayer().isIdle()
+                    && getMyPlayer().getAnimation() == -1
+                    && getMyPlayer().getInteracting() == null) {
+                if (blueDragon != null) {
+                    if (blueDragon.isOnScreen()) {
+                        blueDragon.doAction("Attack");
+                        sleep();
+                    } else {
+                        camera.turnToTile(blueDragon.getLocation());
+                    }
+                } else {
+                    camera.moveRandomly(30);
+                    if (calc.distanceTo(center) > 6) {
+                        walking.walkTileMM(center);
+                        sleep();
+                    }
+                    sleep();
                 }
             }
             return 10;
         }
-        return 10;
     }
 
     public void mousePressed(MouseEvent e) {
@@ -917,6 +920,10 @@ public class AutoBDKPro extends Script implements PaintListener,
     }
 
     public void mouseExited(MouseEvent e) {
+    }
+
+    private void sleep() {
+        sleep(500, 1000);
     }
 
     public void messageReceived(MessageEvent me) {
