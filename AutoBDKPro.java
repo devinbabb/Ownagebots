@@ -32,10 +32,6 @@ import org.rsbot.script.wrappers.RSTile;
 public class AutoBDKPro extends Script implements PaintListener,
         MessageListener, MouseListener {
 
-    private RSTile[] agilitysctotravdung = {new RSTile(2922, 3364),
-        new RSTile(2912, 3373), new RSTile(2898, 3377),
-        new RSTile(2890, 3391), new RSTile(2884, 3395)};
-    private RSTile[] walktodungeon = {new RSTile(2903, 9804), new RSTile(2911, 9808)};
     public long startTime = System.currentTimeMillis();
     private int[] totravladderboundary = {2934, 3355, 2879, 3402};
     private int[] atbluedragonsboundary = {3914, 9796, 2901, 9820};
@@ -45,7 +41,7 @@ public class AutoBDKPro extends Script implements PaintListener,
     String[] names = {"Dragon bones", "Blue drag", "Tooth", "Rune da", "Rune ful", "Ancient"};
     public int[] charms = {12158, 12159, 12160, 12161, 12162, 12163, 12164, 12165, 12166, 12167};
     public int[] prices = new int[6];
-    private boolean shortcut, summonFull = false;
+    private boolean shortcut = false, summonFull = false;
     final int[] strengthPots = {2440, 157, 159, 161};
     final int[] attackPots = {2436, 145, 147, 149};
     final int[] antiPots = {2452, 2454, 2456, 2458};
@@ -75,22 +71,6 @@ public class AutoBDKPro extends Script implements PaintListener,
     private RSNPC drag;
     private int[] startExp = new int[Skill.values().length];
     private BDKGUI gui;
-    final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
-
-        public boolean accept(RSNPC npc) {
-            if (npc != null) {
-                try {
-                    if (npc.getName().equals("Blue dragon")
-                            && !npc.isInCombat()) {
-                        return true;
-                    }
-                } catch (NullPointerException e) {
-                    return false;
-                }
-            }
-            return false;
-        }
-    };
     private boolean nanti;
     private String st;
     private int totalLoot;
@@ -98,7 +78,83 @@ public class AutoBDKPro extends Script implements PaintListener,
     private int bankRun = 0;
     String stat;
     private RSTile[] centerDung = {new RSTile(1011, 4520), new RSTile(1002, 4509), new RSTile(987, 4502)};
-    private boolean paintt = true;
+    private RSTile[] agilitysctotravdung = {new RSTile(2922, 3364),
+        new RSTile(2912, 3373), new RSTile(2898, 3377),
+        new RSTile(2890, 3391), new RSTile(2884, 3395)};
+    private RSTile[] walktodungeon = {new RSTile(2903, 9804), new RSTile(2911, 9808)};
+    //credits to Warlock for this path.
+    private final RSTile[] LADDERS_TO_GATE_ENTRANCE = {new RSTile(2884, 9800),
+        new RSTile(2884, 9802), new RSTile(2884, 9804),
+        new RSTile(2884, 9806), new RSTile(2884, 9808),
+        new RSTile(2884, 9810), new RSTile(2884, 9812),
+        new RSTile(2884, 9814), new RSTile(2884, 9817),
+        new RSTile(2884, 9820), new RSTile(2884, 9824),
+        new RSTile(2884, 9826), new RSTile(2885, 9829),
+        new RSTile(2885, 9832), new RSTile(2885, 9836),
+        new RSTile(2885, 9839), new RSTile(2883, 9842),
+        new RSTile(2885, 9844), new RSTile(2888, 9845),
+        new RSTile(2890, 9847), new RSTile(2893, 9849),
+        new RSTile(2897, 9849), new RSTile(2901, 9849),
+        new RSTile(2905, 9849), new RSTile(2909, 9849),
+        new RSTile(2913, 9849), new RSTile(2917, 9849),
+        new RSTile(2921, 9848), new RSTile(2924, 9846),
+        new RSTile(2926, 9843), new RSTile(2929, 9840),
+        new RSTile(2933, 9837), new RSTile(2935, 9833),
+        new RSTile(2937, 9830), new RSTile(2937, 9827),
+        new RSTile(2938, 9823), new RSTile(2938, 9820),
+        new RSTile(2938, 9816), new RSTile(2938, 9812),
+        new RSTile(2940, 9809), new RSTile(2941, 9806),
+        new RSTile(2942, 9802), new RSTile(2944, 9799),
+        new RSTile(2945, 9796), new RSTile(2949, 9795),
+        new RSTile(2951, 9791), new RSTile(2951, 9788),
+        new RSTile(2951, 9785), new RSTile(2951, 9782),
+        new RSTile(2951, 9779), new RSTile(2951, 9776),
+        new RSTile(2949, 9774), new RSTile(2946, 9774),
+        new RSTile(2943, 9776), new RSTile(2940, 9778),
+        new RSTile(2937, 9778), new RSTile(2935, 9775),
+        new RSTile(2935, 9772), new RSTile(2934, 9768),
+        new RSTile(2934, 9765), new RSTile(2934, 9762),
+        new RSTile(2935, 9759), new RSTile(2934, 9757),
+        new RSTile(2931, 9756), new RSTile(2928, 9756),
+        new RSTile(2925, 9756), new RSTile(2923, 9759),
+        new RSTile(2924, 9762), new RSTile(2924, 9765),
+        new RSTile(2925, 9768), new RSTile(2927, 9771),
+        new RSTile(2930, 9774), new RSTile(2930, 9777),
+        new RSTile(2931, 9781), new RSTile(2933, 9784),
+        new RSTile(2936, 9786), new RSTile(2935, 9789),
+        new RSTile(2934, 9792), new RSTile(2932, 9796),
+        new RSTile(2930, 9799), new RSTile(2928, 9802),
+        new RSTile(2924, 9803)};
+//    final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
+//
+//        public boolean accept(RSNPC npc) {
+//            if (npc != null) {
+//                try {
+//                    if (npc.getName().equals("Blue dragon")
+//                            && !npc.isInCombat()) {
+//                        return true;
+//                    }
+//                } catch (NullPointerException e) {
+//                    return false;
+//                }
+//            }
+//            return false;
+//        }
+//    };
+    private transient final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
+
+        @Override
+        public boolean accept(RSNPC npc) {
+            try {
+                return (npc.getName().equalsIgnoreCase("Blue dragon")
+                        && !npc.isInCombat()
+                        && npc.getInteracting() != getMyPlayer()
+                        && npc.getAnimation() == -1 && !npc.isInteractingWithLocalPlayer());
+            } catch (NullPointerException e) {
+                return false;
+            }
+        }
+    };
 
     @Override
     public boolean onStart() {
@@ -106,10 +162,18 @@ public class AutoBDKPro extends Script implements PaintListener,
 
             if (skills.getRealLevel(Skills.AGILITY) >= 70) {
                 shortcut = true;
+            } else {
+                shortcut = false;
+                if (!inventory.contains(dusty)) {
+                    log("Dusty Key Not Found! Stopping Script, please start with Dusty Key!");
+                    return false;
+                }
             }
 
             if (skills.getRealLevel(Skills.DUNGEONEERING) >= 60) {
                 dungeon = true;
+            } else {
+                dungeon = false;
             }
 
             createAndWaitforGUI();
@@ -160,7 +224,6 @@ public class AutoBDKPro extends Script implements PaintListener,
 
     @Override
     public int loop() {
-
         if (random(1000, 5000) == random(1000, 5000)) {
             performHumanAction();
         }
@@ -214,23 +277,17 @@ public class AutoBDKPro extends Script implements PaintListener,
                         sleep(random(2000, 2200));
                         if (bank.isOpen()) {
                             if (!tabTaken) {
-                                sleep(random(4000, 5000));
+                                sleep(random(3000, 3500));
                                 tab = bank.getCurrentTab();
-                                log("Current tab is" + tab);
-
                                 tabTaken = true;
                                 startBone = bank.getCount(loots[0]);
                                 startHide = bank.getCount(loots[1]);
-
-
-
                             } else {
                                 if (bank.getCurrentTab() != tab) {
                                     openBankTab(tab);
                                     sleep(random(2000, 3000));
                                 }
                             }
-
                             if (bank.depositAllExcept(fallytab, finalPouch)) {
                                 bank.depositAllFamiliar();
                                 bank.depositAllFamiliar();
@@ -257,29 +314,26 @@ public class AutoBDKPro extends Script implements PaintListener,
                                     bank.withdraw(gap(strengthPots), 1);
                                     sleep(random(800, 1000));
                                 }
-
                                 if (rPots) {
                                     bank.withdraw(gap(rangedPots), 1);
                                     sleep(random(800, 1000));
                                 }
-
                                 if (cPots) {
                                     bank.withdraw(gap(combatPots), 1);
                                     sleep(random(800, 1000));
                                 }
-
                                 if (dAnti) {
                                     bank.withdraw(gap(antiPots), 1);
                                     sleep(random(800, 1000));
                                 }
-
                                 if (useSummon) {
-                                    bank.withdraw(finalPouch, 1);
-                                    sleep(random(800, 1000));
+                                    if (!inventory.contains(finalPouch)) {
+                                        bank.withdraw(finalPouch, 1);
+                                        sleep(random(800, 1000));
+                                    }
                                     bank.withdraw(gap(summonPots), 1);
                                     sleep(random(800, 1000));
                                 }
-
                                 if (bank.close()) {
                                     sleep(random(600, 700));
                                     if (dPots) {
@@ -290,19 +344,16 @@ public class AutoBDKPro extends Script implements PaintListener,
                                             sleep(random(800, 1000));
                                         }
                                     }
-
                                     if (rPots) {
                                         if (didPot(rangedPots)) {
                                             sleep(random(800, 1000));
                                         }
                                     }
-
                                     if (cPots) {
                                         if (didPot(combatPots)) {
                                             sleep(random(800, 1000));
                                         }
                                     }
-
                                     if (dPots) {
                                         if (bank.open()) {
                                             while (!bank.getInterface().isValid()) {
@@ -365,14 +416,16 @@ public class AutoBDKPro extends Script implements PaintListener,
                 walking.walkPathMM(agilitysctotravdung);
             }
         } else if (isInArea(new int[]{2881, 9794, 2887, 9801})) {
-            RSObject h = objects.getNearest(9293);
-            if (h != null) {
-                if (h.isOnScreen()) {
-                    h.doAction("Squeeze");
-                    sleep(random(3000, 4000));
-                    waitToMove();
-                } else {
-                    camera.turnToObject(h);
+            if (shortcut) {
+                RSObject h = objects.getNearest(9293);
+                if (h != null) {
+                    if (h.isOnScreen()) {
+                        h.doAction("Squeeze");
+                        sleep(random(3000, 4000));
+                        waitToMove();
+                    } else {
+                        camera.turnToObject(h);
+                    }
                 }
             }
         } else if (isInArea(new int[]{2889, 9793, 2923, 9813})) {
@@ -396,7 +449,24 @@ public class AutoBDKPro extends Script implements PaintListener,
             }
         } else if ((Math.floor(getMyPlayer().getLocation().getY() / 1000) == 4.0)) {
             fight();
-        } else {
+        } else if (!shortcut && !isInArea(new int[]{2889, 9793, 2923, 9813})) {
+            RSObject gate = objects.getNearest(2623);
+            if (gate == null) {
+                walking.walkPathMM(walktodungeon);
+                sleep(random(600, 700));
+            } else if (!gate.isOnScreen()) {
+                walking.walkPathMM(walktodungeon);
+                sleep(random(600, 700));
+            } else {
+                camera.turnToObject(gate);
+                RSItem key = inventory.getItem(dusty);
+                if (key.doAction("Use")) {
+                    sleep(500, 1500);
+                    if (gate.doAction("Use Dusty key -> Gate")) {
+                        sleep(1500, 2500);
+                    }
+                }
+            }
         }
         return 1;
 
@@ -532,6 +602,7 @@ public class AutoBDKPro extends Script implements PaintListener,
                 + ((totalHide + storedHides + inventory.getCount(loots[1]) - ivenHide) * prices[1]);
         lph = (int) (totalLoot / ((Double.parseDouble(st.substring(0, 2))) + (Double.parseDouble(st.substring(3, 5)) / 60)
                 + (Double.parseDouble(st.substring(6, 8)) / 3600)));
+
         if (ptab == 1) {
             g.drawImage(tabOne, 0, 288, null);
             drawSkillBars(g);
@@ -544,6 +615,7 @@ public class AutoBDKPro extends Script implements PaintListener,
         } else {
             g.drawImage(closed, 0, 288, null);
         }
+        drawMouse(g);
     }
 
     private void drawString(Graphics g, String s, int x, int y) {
@@ -665,7 +737,7 @@ public class AutoBDKPro extends Script implements PaintListener,
         if (nanti) {
             if (inventory.containsOneOf(antiPots[0], antiPots[1], antiPots[2], antiPots[3])) {
                 if (inventory.getItem(antiPots).doAction("Drink")) {
-                    sleep(random(800, 900));
+                    sleep(random(3500, 3900));
                     nanti = false;
                     return 20;
                 }
@@ -691,7 +763,7 @@ public class AutoBDKPro extends Script implements PaintListener,
             if (getMyPlayer().getHPPercent() < (random(eatAt - 5, eatAt + 5))) {
                 if (inventory.contains(food)) {
                     inventory.getItem(food).doAction("Eat");
-                    sleep(random(2500, 3400));
+                    sleep(random(3500, 3900));
                     return 100;
                 } else {
                     inventory.getItem(fallytab).doAction("Break");
@@ -709,7 +781,6 @@ public class AutoBDKPro extends Script implements PaintListener,
                         if (useSummon && !summonFull) {
                             storeSummon(true);
                         }
-
                         sleep(random(800, 900));
                         if (inventory.isFull()) {
                             inventory.getItem(food).doAction("Eat");
@@ -718,7 +789,6 @@ public class AutoBDKPro extends Script implements PaintListener,
                     }
                     charmz.doAction("charm");
                     sleep(600, 850);
-
                     while (getMyPlayer().isMoving()) {
                         sleep(1200, 1400);
                     }
@@ -799,7 +869,7 @@ public class AutoBDKPro extends Script implements PaintListener,
 
         RSCharacter inter = getMyPlayer().getInteracting();
         if (inter != null) {
-            if (inter.getName().contains("Blue dragon")) {
+            if (inter.getName().equals("Blue dragon")) {
                 if (inter.getAnimation() == 12250) {
                     sleep(random(3900, 4500));
                     return 100;
@@ -829,7 +899,6 @@ public class AutoBDKPro extends Script implements PaintListener,
                     sleep(random(600, 700));
                 }
             }
-
             return 10;
         }
         return 10;
@@ -865,7 +934,6 @@ public class AutoBDKPro extends Script implements PaintListener,
         }
 
         private void initComponents() {
-
             jLabel5 = new javax.swing.JLabel();
             jSeparator1 = new javax.swing.JSeparator();
             jLabel1 = new javax.swing.JLabel();
@@ -896,41 +964,26 @@ public class AutoBDKPro extends Script implements PaintListener,
             jLabel11 = new javax.swing.JLabel();
             jCheckBox9 = new javax.swing.JCheckBox();
             jLabel12 = new javax.swing.JLabel();
-
             setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
             setTitle("General's Auto BDK  Pro.");
             setAlwaysOnTop(true);
             setBackground(new java.awt.Color(255, 255, 255));
             setFocusable(false);
-
             jLabel5.setForeground(new java.awt.Color(0, 153, 51));
             jLabel5.setText("Food:");
-
             jLabel1.setText("Food ID:");
-
             jLabel2.setText("Withdraw:");
-
             jLabel6.setText("Eat At:");
-
             jSpinner1.setModel(new javax.swing.SpinnerNumberModel(40, 20, 90, 1));
-
             jLabel7.setForeground(new java.awt.Color(204, 0, 102));
             jLabel7.setText("Pots:");
-
             jCheckBox2.setText("Drink Antifire");
-
             jCheckBox3.setText("Drink Supers");
-
             jCheckBox4.setText("Drink Range Pots");
-
             jCheckBox5.setText("Drink Combat Pots");
-
             jCheckBox1.setText("Loot Charms?");
-
             jLabel4.setText("Fally Teleport Tabs, and Dusty Key (if not 70 agility), food in first slot (if Using)");
-
             jLabel3.setText("Start script in fally bank with:");
-
             jButton1.setText("Start");
             jButton1.addActionListener(new java.awt.event.ActionListener() {
 
@@ -938,31 +991,21 @@ public class AutoBDKPro extends Script implements PaintListener,
                     jButton1ActionPerformed(evt);
                 }
             });
-
             jLabel8.setForeground(new java.awt.Color(0, 51, 255));
             jLabel8.setText("Summoning:");
-
             jCheckBox7.setText("Beast of Burden:");
-
             jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Bull Ant", "TerrorBird", "War Tortoise", "Pack Yak"}));
-
             jLabel9.setForeground(new java.awt.Color(255, 0, 0));
             jLabel9.setText("Looting:");
-
             jCheckBox8.setText("Loot Hides");
-
             jLabel10.setForeground(new java.awt.Color(255, 0, 255));
             jLabel10.setText("Finalize:");
-
             jLabel11.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
             jLabel11.setForeground(new java.awt.Color(0, 102, 255));
             jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
             jLabel11.setText("Ownageful's Blue Dragon Killer Pro");
-
             jCheckBox9.setText("Loot Dragon Bones");
-
             jLabel12.setText("%");
-
             javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
             getContentPane().setLayout(layout);
             layout.setHorizontalGroup(
