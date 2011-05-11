@@ -9,6 +9,7 @@ import org.rsbot.event.listeners.PaintListener;
 import org.rsbot.script.Script;
 import org.rsbot.script.ScriptManifest;
 import org.rsbot.script.methods.Equipment;
+import org.rsbot.script.util.Filter;
 import org.rsbot.script.util.Timer;
 import org.rsbot.script.util.WindowUtil;
 import org.rsbot.script.wrappers.RSArea;
@@ -69,8 +70,19 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
     private RSObject trapdoor, dungeonGate, fullCannon;
     private RSNPC dragon;
     private int trapdoorID = 9472, dungeonGateID = 52859, fullCannonID = 6;
+    private final Filter<RSNPC> frostDragonFilter = new Filter<RSNPC>() {
+        @Override
+        public boolean accept(RSNPC npc) {
+            try {
+                return (npc.getName().equalsIgnoreCase("Frost dragon")
+                        && (!npc.isInCombat() || npc.getInteracting() != getMyPlayer()));
+            } catch (NullPointerException e) {
+                return false;
+            }
+        }
+    };
     FDKGUI gui;
-    Timer t;
+    Timer tm;
     @Override
     public boolean onStart() {
         return (game.isLoggedIn() && createAndWaitForGUI());
@@ -200,6 +212,8 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
         }
         sleep(100);
         calculatePrices();
+        mouse.setSpeed(random(5, 6));
+        tm.reset();
         while (gui.isVisible()) {
             sleep(100);
         }
@@ -209,6 +223,8 @@ public class OwnageFDK extends Script implements PaintListener, MessageListener,
         public FDKGUI() {
             initComponents();
             this.setLocation(450, 280);
+            this.setResizable(false);
+            this.setSize(424, 544);
         }
         private void initComponents() {
             jLabel5 = new javax.swing.JLabel();

@@ -992,7 +992,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 			jLabel12 = new javax.swing.JLabel();
 
 			setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-			setTitle("General's Auto BDK  Pro.");
+			setTitle("Ownage Blue Dragon Killer");
 			setAlwaysOnTop(true);
 			setBackground(new java.awt.Color(255, 255, 255));
 			setFocusable(false);
