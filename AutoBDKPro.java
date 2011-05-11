@@ -1,4 +1,5 @@
 
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -28,6 +29,8 @@ import org.rsbot.script.wrappers.RSNPC;
 import org.rsbot.script.wrappers.RSObject;
 import org.rsbot.script.wrappers.RSTile;
 
+
+// adding long path
 @ScriptManifest(authors = {"Ownageful"}, name = "Ownageful's Blue Dragon Killer Pro", version = 1.0, description = "BDK Pro")
 public class AutoBDKPro extends Script implements PaintListener,
         MessageListener, MouseListener {
