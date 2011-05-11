@@ -1128,7 +1128,7 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 					continue;
 				}
 				for (int x = 0; x < 4; x++) {
-					if (lastCount[x] > inventory.getCount(profitableLoots[x]) && lastCount[x] != 0) {
+					if (lastCount[x] < inventory.getCount(profitableLoots[x]) && lastCount[x] != 0) {
 						totalLoot = totalLoot + prices[x];
 					}
 				}
