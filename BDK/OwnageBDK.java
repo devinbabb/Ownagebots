@@ -15,7 +15,7 @@ import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.net.URL;
 
-@ScriptManifest(authors = {"Ownageful"}, name = "Ownageful's Blue Dragon Killer Pro", version = 1.0, description = "BDK Pro")
+@ScriptManifest(authors = {"Ownageful, Aut0r"}, name = "Blue Dragon Killer", version = 1.01, description = "<html><body style='font-family: Arial; margin: 10px;'><span style='color: #0000A0; font-weight: bold;'>Blue Dragon Killer</span>&nbsp;<strong>Version:&nbsp;1.01</strong><br />")
 public class OwnageBDK extends Script implements PaintListener, MessageListener, MouseListener {
 	public long startTime = System.currentTimeMillis();
 	public int agility1 = 11844, finalPouch = -1, eatAt = -1, fallytab = 8009, storedHides = 0, storedBones = 0;
