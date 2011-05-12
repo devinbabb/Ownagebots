@@ -1,4 +1,3 @@
-
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -18,7 +17,7 @@ import org.rsbot.script.wrappers.RSItem;
 import org.rsbot.script.wrappers.RSNPC;
 import org.rsbot.script.wrappers.RSObject;
 import org.rsbot.script.wrappers.RSTile;
-@ScriptManifest(authors = {"Ownageful"}, name = "Ownageful's Frost Dragon Killer", version = 1.0, description = "FDK Pro. Settings in GUI")
+@ScriptManifest(authors = {"Ownageful, Aut0r"}, name = "Ownageful's Frost Dragon Killer", version = 1.0, description = "FDK Pro. Settings in GUI")
 public class OwnageFDK extends Script implements PaintListener, MessageListener, MouseListener {
     private int[] prayerPotions = {139, 141, 143, 2434};
     private int[] strengthPots = {2440, 157, 159, 161};
