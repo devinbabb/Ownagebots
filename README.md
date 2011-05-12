@@ -1,12 +1,12 @@
-# OwnagefulGDK 
-### By: Open Private Development via https://github.com/RSBot/GDK/
+# Ownagebots
+### By: Open Private Development via https://github.com/RSBot/Ownagebots
 
 ## Dependencies
-#### Java development kit to compile.
+#### JDK(Java Development Kit) to compile.
 #### RSBot to run.
 
-## Update Log:
-### Version 4.2
-#### Added some code for future use to drink antipoisons if dying.
-#### Changed a few sleep times for picking up items.
-#### SwingUtilities to invoke and wait for gui to load.
+## Content
+#### OwnageFDKPro -> Current State: Development
+#### OwnageBDKPro -> Current State: Development
+#### OwnageGDKPro -> Current State: Released
+#### OwnageFighterPro -> Current State: Development
