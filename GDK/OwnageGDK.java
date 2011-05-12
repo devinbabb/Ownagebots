@@ -14,21 +14,8 @@ import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
-/**
- * http://github.com/RSBot/GDK
- * Version 4.2 Update: Aut0r
- * Patch to kinda do something for poisoned players when attacked in wild.
- * Patched so gui would operate in new bot update.
- * <p/>
- * Version 4.21 Update Aut0r
- * Added Loot class
- * Changed some variables for future use.
- * Added playerCombat in messageListener.
- * Better loot implementation for next update(priority looting)
- */
-
-@ScriptManifest(authors = "Ownageful, Aut0r", name = "Ownageful GDK", version = 4.22, description = "Settings in GUI.")
-public class OwnagefulGDK extends Script implements MessageListener, PaintListener {
+@ScriptManifest(authors = "Ownageful, Aut0r", name = "Green Dragon Killer", version = 4.23, description = "<html><body style='font-family: Arial; margin: 10px;'><span style='color: #00AA00; font-weight: bold;'>Green Dragon Killer</span>&nbsp;<strong>Version:&nbsp;2.43</strong><br />")
+public class OwnageGDK extends Script implements MessageListener, PaintListener {
 
 	private boolean startScript;
 	boolean useSupers = false;
@@ -630,10 +617,10 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 				}
 			}
 		}
-		allLoot = groundItems.getNearest(loots);
 		priorityLoot = groundItems.getNearest(priorityLoots);
-		if (allLoot != null || priorityLoot != null) {
-			if (calc.tileOnScreen(allLoot.getLocation())) {
+		allLoot = groundItems.getNearest(loots);
+		if (priorityLoot != null) {
+			if (calc.tileOnScreen(priorityLoot.getLocation())) {
 				if (inventory.isFull() && inventory.contains(food)) {
 					inventory.getItem(food).doAction("Eat");
 					sleep(random(600, 800));
@@ -649,7 +636,21 @@ public class OwnagefulGDK extends Script implements MessageListener, PaintListen
 							return 100;
 						}
 					}
-				} else if (allLoot != null) {
+				}
+			} else {
+				walking.walkTileMM(priorityLoot.getLocation());
+				while (getMyPlayer().isMoving()) {
+					sleep(200, 400);
+				}
+				return 100;
+			}
+		} else if (allLoot != null && priorityLoot == null) {
+			if (calc.tileOnScreen(allLoot.getLocation())) {
+				if (inventory.isFull() && inventory.contains(food)) {
+					inventory.getItem(food).doAction("Eat");
+					sleep(random(600, 800));
+				}
+				if (allLoot != null) {
 					for (int j = 0; j < loots.length; j++) {
 						if (allLoot.getItem().getID() == loots[j]) {
 							allLoot.doAction("Take " + lootNames[j]);
