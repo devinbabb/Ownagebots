@@ -1,6 +1,6 @@
 # Ownagebots
-### By: Open Private Development via https://github.com/RSBot/Ownagebots
-### Colaborators: Aut0r and Ownageful
+#### By: Open Private Development via https://github.com/RSBot/Ownagebots
+#### Collaborators: Aut0r and Ownageful
 
 ## Dependencies
 #### JDK(Java Development Kit) to compile.
