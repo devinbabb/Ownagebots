@@ -124,8 +124,6 @@ public class AutoBDKPro extends Script implements PaintListener,
         new RSTile(2930, 9799), new RSTile(2928, 9802),
         new RSTile(2924, 9803)};
     private transient final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
-
-        @Override
         public boolean accept(RSNPC npc) {
             try {
                 return (npc.getName().equalsIgnoreCase("Blue dragon")
@@ -138,8 +136,6 @@ public class AutoBDKPro extends Script implements PaintListener,
         }
     };
     private transient final Filter<RSNPC> filt2 = new Filter<RSNPC>() {
-
-        @Override
         public boolean accept(RSNPC npc) {
             try {
                 return (npc.getName().equalsIgnoreCase("Blue dragon")
