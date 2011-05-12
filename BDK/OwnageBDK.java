@@ -116,7 +116,7 @@ public class OwnageBDK extends Script implements PaintListener,
 	private transient final Filter<RSNPC> filt1 = new Filter<RSNPC>() {
 		public boolean accept(RSNPC npc) {
 			try {
-				return (npc.getName().equalsIgnoreCase("Blue dragon")
+				return (npc.getName().contains("Blue dragon")
 						&& !npc.isInCombat()
 						&& npc.getInteracting() != getMyPlayer()
 						&& npc.getAnimation() == -1 && !npc.isInteractingWithLocalPlayer());
@@ -128,7 +128,7 @@ public class OwnageBDK extends Script implements PaintListener,
 	private transient final Filter<RSNPC> filt2 = new Filter<RSNPC>() {
 		public boolean accept(RSNPC npc) {
 			try {
-				return (npc.getName().equalsIgnoreCase("Blue dragon")
+				return (npc.getName().contains("Blue dragon")
 						&& !npc.isInCombat());
 			} catch (NullPointerException e) {
 				return false;
@@ -253,114 +253,123 @@ public class OwnageBDK extends Script implements PaintListener,
 					if (!b.isOnScreen()) {
 						walking.walkTileMM(b.getLocation());
 					} else {
-						bank.open();
-						sleep(random(2000, 2200));
-						if (bank.isOpen()) {
-							if (!tabTaken) {
-								sleep(random(3000, 3500));
-								tab = bank.getCurrentTab();
-								tabTaken = true;
-								startBone = bank.getCount(loots[0]);
-								startHide = bank.getCount(loots[1]);
-							} else {
-								if (bank.getCurrentTab() != tab) {
-									openBankTab(tab);
-									sleep(random(2000, 3000));
+						try {
+							bank.open();
+							sleep(random(2000, 2200));
+							if (bank.isOpen()) {
+								if (!tabTaken) {
+									sleep(random(3000, 3500));
+									tab = bank.getCurrentTab();
+									tabTaken = true;
+									startBone = bank.getCount(loots[0]);
+									startHide = bank.getCount(loots[1]);
+								} else {
+									if (bank.getCurrentTab() != tab) {
+										openBankTab(tab);
+										sleep(random(2000, 3000));
+									}
 								}
-							}
-							if (bank.depositAllExcept(fallytab, finalPouch)) {
-								bank.depositAllFamiliar();
-								storedBones = 0;
-								storedHides = 0;
-								summonFull = false;
-								sleep(random(300, 500));
-								totalBone = bank.getCount(loots[0]) - startBone - ivenBone;
-								totalHide = bank.getCount(loots[1]) - startHide - ivenHide;
-								ivenBone = 0;
-								ivenHide = 0;
-								sleep(random(1000, 2000));
-								if ((food != 0) && bank.isOpen()) {
-									while (!inventory.contains(food)) {
-										if (bank.getCurrentTab() != tab) {
-											openBankTab(tab);
-											sleep(random(2000, 3000));
-										}
 
-										bank.withdraw(food, withdraw);
-										sleep(random(800, 1000));
+								if (bank.depositAllExcept(fallytab, finalPouch)) {
+									if (useSummon) {
+										bank.depositAllFamiliar();
 									}
-								}
-								if (dPots) {
-									bank.withdraw(gap(strengthPots), 1);
-									sleep(random(800, 1000));
-								}
-								if (rPots) {
-									bank.withdraw(gap(rangedPots), 1);
-									sleep(random(800, 1000));
-								}
-								if (cPots) {
-									bank.withdraw(gap(combatPots), 1);
-									sleep(random(800, 1000));
-								}
-								if (dAnti) {
-									bank.withdraw(gap(antiPots), 1);
-									sleep(random(800, 1000));
-								}
-								if (useSummon) {
-									if (!inventory.contains(finalPouch)) {
-										bank.withdraw(finalPouch, 1);
-										sleep(random(800, 1000));
+									storedBones = 0;
+									storedHides = 0;
+									summonFull = false;
+									sleep(random(300, 500));
+									totalBone = bank.getCount(loots[0]) - startBone - ivenBone;
+									totalHide = bank.getCount(loots[1]) - startHide - ivenHide;
+									ivenBone = 0;
+									ivenHide = 0;
+									sleep(random(1000, 2000));
+									if ((food != 0) && bank.isOpen()) {
+										while (!inventory.contains(food)) {
+											if (bank.getCurrentTab() != tab) {
+												openBankTab(tab);
+												sleep(random(2000, 3000));
+											}
+
+											bank.withdraw(food, withdraw);
+											sleep(random(800, 1000));
+										}
 									}
-									bank.withdraw(gap(summonPots), 1);
-									sleep(random(800, 1000));
-								}
-								if (bank.close()) {
-									sleep(random(600, 700));
 									if (dPots) {
-										if (didPot(strengthPots)) {
-											sleep(random(800, 1000));
-										}
-										if (didPot(attackPots)) {
-											sleep(random(800, 1000));
-										}
+										bank.withdraw(gap(strengthPots), 1);
+										sleep(random(800, 1000));
 									}
 									if (rPots) {
-										if (didPot(rangedPots)) {
-											sleep(random(800, 1000));
-										}
+										bank.withdraw(gap(rangedPots), 1);
+										sleep(random(800, 1000));
 									}
 									if (cPots) {
-										if (didPot(combatPots)) {
+										bank.withdraw(gap(combatPots), 1);
+										sleep(random(800, 1000));
+									}
+									if (dAnti) {
+										bank.withdraw(gap(antiPots), 1);
+										sleep(random(800, 1000));
+									}
+									if (useSummon) {
+										if (!inventory.contains(finalPouch)) {
+											bank.withdraw(finalPouch, 1);
 											sleep(random(800, 1000));
 										}
+										bank.withdraw(gap(summonPots), 1);
+										sleep(random(800, 1000));
 									}
-									if (dPots) {
-										if (bank.open()) {
-											while (!bank.getInterface().isValid()) {
-												sleep(random(1500, 2000));
-												bank.open();
+									if (bank.close()) {
+										sleep(random(600, 700));
+										if (dPots) {
+											if (didPot(strengthPots)) {
+												sleep(random(800, 1000));
+											}
+											if (didPot(attackPots)) {
+												sleep(random(800, 1000));
 											}
 										}
-										if (bank.isOpen()) {
-											if (!inventory.containsOneOf(antiPots[0], antiPots[1], antiPots[2], antiPots[3]) && dAnti) {
-												bank.depositAllExcept(fallytab, food, finalPouch, summonPots[0], summonPots[1], summonPots[2], summonPots[3]);
-
-												if (bank.getCurrentTab() != tab) {
-													openBankTab(tab);
-													sleep(random(1000, 1800));
+										if (rPots) {
+											if (didPot(rangedPots)) {
+												sleep(random(800, 1000));
+											}
+										}
+										if (cPots) {
+											if (didPot(combatPots)) {
+												sleep(random(800, 1000));
+											}
+										}
+										if (dPots) {
+											if (bank.open()) {
+												while (!bank.getInterface().isValid()) {
+													sleep(random(1500, 2000));
+													bank.open();
 												}
-												bank.withdraw(gap(antiPots), 1);
-												sleep(random(500, 600));
-											} else {
-												bank.depositAllExcept(fallytab, finalPouch, food,
-														antiPots[0], antiPots[1], antiPots[2], antiPots[3],
-														summonPots[0], summonPots[1], summonPots[2], summonPots[3]);
-												sleep(random(500, 600));
+											}
+											if (bank.isOpen()) {
+
+												if (!inventory.containsOneOf(antiPots[0], antiPots[1], antiPots[2], antiPots[3]) && dAnti) {
+													bank.depositAllExcept(fallytab, food, finalPouch, summonPots[0], summonPots[1], summonPots[2], summonPots[3]);
+
+													if (bank.getCurrentTab() != tab) {
+														openBankTab(tab);
+														sleep(random(1000, 1800));
+													}
+													bank.withdraw(gap(antiPots), 1);
+													sleep(random(500, 600));
+												} else {
+													bank.depositAllExcept(fallytab, finalPouch, food,
+															antiPots[0], antiPots[1], antiPots[2], antiPots[3],
+															summonPots[0], summonPots[1], summonPots[2], summonPots[3]);
+
+													sleep(random(500, 600));
+												}
 											}
 										}
 									}
 								}
 							}
+						} catch (NullPointerException e) {
+							log(e);
 						}
 					}
 				}
