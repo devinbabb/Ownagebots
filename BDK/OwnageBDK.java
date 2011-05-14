@@ -377,7 +377,8 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 					camera.turnToObject(h);
 				}
 			}
-			if(skills.getCurrentLevel(Skills.SUMMONING) < 20 && useSummon) {
+		} else if (isInArea(new int[]{2888, 9785, 2924, 9813})) {
+			if (skills.getCurrentLevel(Skills.SUMMONING) < 20 && useSummon) {
 				walking.walkTileMM(summonRecharge);
 				waitToMove();
 				RSObject obelisk = objects.getNearest(29947);
@@ -388,7 +389,10 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 					}
 				}
 			}
-		} else if (isInArea(new int[]{2889, 9793, 2924, 9813})) {
+			if(isInArea(new int[]{2888, 9786, 2892, 9790})) {
+				RSTile d = new RSTile(2894, 9800);
+				walking.walkTileMM(d);
+			}
 			stat = "Fighting drags";
 			if (dungeon) {
 				RSObject d = objects.getNearest(52852);
