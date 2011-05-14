@@ -896,7 +896,16 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 				drag = npcs.getNearest(dungeonFilter);
 				if (drag != null) {
 					if (drag.isOnScreen()) {
-						drag.doAction("Attack");
+						RSModel dragModel = drag.getModel();
+						if(dragModel != null) {
+							try {
+								dragModel.doAction("Attack");
+							} catch(NullPointerException e) {
+								log.info("Dragon model is null.");
+							}
+						} else {
+							drag.doAction("Attack");
+						}
 						sleep(random(1500, 2000));
 						while (getMyPlayer().isMoving()) {
 							sleep(200, 400);
