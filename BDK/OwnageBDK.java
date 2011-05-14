@@ -94,6 +94,8 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 			new RSTile(2934, 9792), new RSTile(2932, 9796),
 			new RSTile(2930, 9799), new RSTile(2928, 9802),
 			new RSTile(2924, 9803)};
+	RSTile summonRecharge = new RSTile(2890, 9788);
+
 	private transient final Filter<RSNPC> outsideFilter = new Filter<RSNPC>() {
 		public boolean accept(RSNPC npc) {
 			try {
@@ -373,6 +375,17 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 					waitToMove();
 				} else {
 					camera.turnToObject(h);
+				}
+			}
+			if(skills.getCurrentLevel(Skills.SUMMONING) < 20 && useSummon) {
+				walking.walkTileMM(summonRecharge);
+				waitToMove();
+				RSObject obelisk = objects.getNearest(29947);
+				if(obelisk != null) {
+					obelisk.doAction("Renew-points");
+					for(int i = 0; i < 20 || skills.getCurrentLevel(Skills.SUMMONING) > 20; i++) {
+						sleep(100);
+					}
 				}
 			}
 		} else if (isInArea(new int[]{2889, 9793, 2924, 9813})) {
