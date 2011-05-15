@@ -1,35 +1,23 @@
-
-import java.awt.Color;
-import java.awt.Point;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.awt.*;
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import org.rsbot.Configuration;
 import org.rsbot.script.Script;
 import org.rsbot.script.ScriptManifest;
-import org.rsbot.util.GlobalConfiguration;
-
 @ScriptManifest(authors = {"Ownageful"}, keywords = {"Ownageful"}, name = "Ownagebots Script Loader", version = 1.0, description = "Access to all OwnageBots")
 public class OBLogin extends Script {
-
     private boolean doneLogin = false;
     private Script scripts;
     private String user;
     private String pass;
     OBLoginGUI loginGui;
-    private String location = GlobalConfiguration.Paths.getScriptsPrecompiledDirectory() + File.separator;
+    private String location1 = Configuration.Paths.getScriptsPrecompiledDirectory() + File.separator;
     private File obprops;
-
     private enum STATUS {
-
         S_VERIFIED, S_DECLINED, S_ERROR, S_INPUT_ERROR, S_IPCONFLICT;
     }
-
     @Override
     public boolean onStart() {
         if (loginGui == null) {
@@ -42,7 +30,7 @@ public class OBLogin extends Script {
         }
         switch (getStatus()) {
             case S_VERIFIED:
-                obprops = new File(location + "obprops.ini");
+                obprops = new File(location1 + "obprops.ini");
                 try {
                     if (obprops.exists()) {
                         obprops.delete();
@@ -87,12 +75,10 @@ public class OBLogin extends Script {
             return this.onStart();
         }
     }
-
     @Override
     public int loop() {
         return scripts.loop();
     }
-
     private STATUS getStatus() {
         if (user.isEmpty() || pass.isEmpty()) {
             return STATUS.S_INPUT_ERROR;
@@ -122,11 +108,9 @@ public class OBLogin extends Script {
             }
         }
     }
-
     private void createAndWaitforGUI() {
         sleep(100);
     }
-
     public void writeProperies(File f) {
         try {
             FileWriter a = new FileWriter(f);
@@ -139,33 +123,27 @@ public class OBLogin extends Script {
         } catch (IOException iOException) {
         }
     }
-
     @Override
     public void onFinish() {
         this.scripts.onFinish();
     }
-
     private void loadOBLoader() {
         try {
             URL url = new URL("http://ownagebots.com/loader/index.php?request=obscripts");
-            URLClassLoader cl1 = new URLClassLoader(new URL[]{url});
-            this.scripts = ((Script) cl1.loadClass("OBScripts").newInstance());
+            URLClassLoader cl = new URLClassLoader(new URL[]{url});
+            this.scripts = (Script) cl.loadClass("OBScripts").newInstance();
             delegateTo(this.scripts);
             this.loginGui.dispose();
-            this.log(scripts.getClass().getName());
             this.doneLogin = true;
         } catch (Exception e) {
             this.log.severe("An error occurred, please start the script again .");
         }
     }
-
     public class OBLoginGUI extends javax.swing.JFrame {
-
         public OBLoginGUI() {
             initComponents();
             this.setLocation(new Point(600, 300));
         }
-
     // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
@@ -255,7 +233,6 @@ public class OBLogin extends Script {
 
         pack();
     }// </editor-fold>                        
-
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {                                         
         user = jTextField1.getText();
         pass = jPasswordField1.getText();
