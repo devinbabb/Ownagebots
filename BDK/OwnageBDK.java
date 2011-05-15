@@ -1,4 +1,3 @@
-
 import org.rsbot.event.events.MessageEvent;
 import org.rsbot.event.listeners.MessageListener;
 import org.rsbot.event.listeners.PaintListener;
@@ -187,7 +186,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 		minorChecks();
 		if (nBank) {
 			stat = "Walking to Bank";
-			walking.walkPathMM(toBank);
+			walkPathMM(toBank);
 			if (isInArea(bankBoundry)) {
 				bankRun++;
 				nBank = false;
@@ -203,7 +202,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 			} else {
 				RSObject b = objects.getNearest(11758);
 				if (b != null) {
-					camera.turnToObject(b);
+					camera.turnTo(b);
 					if (!b.isOnScreen()) {
 						walking.walkTileMM(b.getLocation());
 					} else {
@@ -341,7 +340,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 			RSObject a = objects.getNearest(agility1);
 			if (a != null) {
 				if (calc.distanceTo(a) <= 4) {
-					camera.turnToObject(a);
+					camera.turnTo(a);
 					a.doAction("Climb");
 					waitToMove();
 				} else {
@@ -358,13 +357,13 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 					l.doAction("Climb");
 					sleep(random(800, 1200));
 				} else {
-					walking.walkPathMM(agilitysctotravdung);
+					walkPathMM(agilitysctotravdung);
 					while (getMyPlayer().isMoving() && calc.distanceTo(walking.getDestination()) >= 4) {
 						sleep(random(100, 200));
 					}
 				}
 			} else {
-				walking.walkPathMM(agilitysctotravdung);
+				walkPathMM(agilitysctotravdung);
 			}
 		} else if (isInArea(new int[]{2881, 9794, 2887, 9801}) && shortcut) {
 			RSObject h = objects.getNearest(9293);
@@ -374,7 +373,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 					sleep(random(3000, 4000));
 					waitToMove();
 				} else {
-					camera.turnToObject(h);
+					camera.turnTo(h);
 				}
 			}
 		} else if (isInArea(new int[]{2888, 9785, 2924, 9813})) {
@@ -401,11 +400,11 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 						d.doAction("Enter");
 						sleep(random(1500, 2200));
 					} else {
-						walking.walkPathMM(walktodungeon);
+						walkPathMM(walktodungeon);
 						sleep(random(600, 700));
 					}
 				} else {
-					walking.walkPathMM(walktodungeon);
+					walkPathMM(walktodungeon);
 					sleep(random(600, 700));
 				}
 			} else {
@@ -417,13 +416,13 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 			log("We are where we wanna be");
 			RSObject gate = objects.getNearest(2623);
 			if (gate == null) {
-				walking.walkPathMM(LADDERS_TO_GATE_ENTRANCE);
+				walkPathMM(LADDERS_TO_GATE_ENTRANCE);
 				sleep(random(1200, 1300));
 			} else if (!gate.isOnScreen()) {
-				walking.walkPathMM(LADDERS_TO_GATE_ENTRANCE);
+				walkPathMM(LADDERS_TO_GATE_ENTRANCE);
 				sleep(random(1200, 1300));
 			} else {
-				camera.turnToObject(gate);
+				camera.turnTo(gate);
 				RSItem key = inventory.getItem(dusty);
 				if (key.doAction("Use")) {
 					sleep(500, 1500);
@@ -613,14 +612,14 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 	public void onRepaint(Graphics g1) {
 		Graphics2D g = (Graphics2D) g1;
 		st = tm.toElapsedString();
-		totalLoot = ((totalBone + storedBones + inventory.getCount(loots[0]) - ivenBone) * prices[0])
-				+ ((totalHide + storedHides + inventory.getCount(loots[1]) - ivenHide) * prices[1]);
-		lph = (int) (totalLoot / ((Double.parseDouble(st.substring(0, 2))) + (Double.parseDouble(st.substring(3, 5)) / 60)
-				+ (Double.parseDouble(st.substring(6, 8)) / 3600)));
+		//totalLoot = ((totalBone + storedBones + inventory.getCount(loots[0]) - ivenBone) * prices[0])
+		//		+ ((totalHide + storedHides + inventory.getCount(loots[1]) - ivenHide) * prices[1]);
+		//lph = (int) (totalLoot / ((Double.parseDouble(st.substring(0, 2))) + (Double.parseDouble(st.substring(3, 5)) / 60)
+		//		+ (Double.parseDouble(st.substring(6, 8)) / 3600)));
 
 		if (ptab == 1) {
 			g.drawImage(tabOne, 0, 288, null);
-			drawSkillBars(g);
+            drawSkillBars(g);
 			drawString(g, "Time Running: " + st, 290, 400);
 			drawString(g, "Status: " + stat, 290, 415);
 			drawString(g, "Total Loot: " + totalLoot, 290, 430);
@@ -641,24 +640,24 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 		g.drawString(s, x + 1, y + 1);
 	}
 
-	private void drawSkillBars(Graphics g) {
-		for (Skill s : Skill.values()) {
-			int x1 = s.index <= 4 ? 20 : 180;
-			int y1 = s.index <= 4 ? 360 + (s.index * 20) : 360 + ((s.index - 4) * 20);
-			g.setColor(new Color(90, 15, 15, 100));
-			g.drawRect(x1, y1, 250, 15);
-			g.setColor(new Color(0, 0, 0, 50));
-			g.fillRect(x1, y1, (int) (skills.getPercentToNextLevel(s.skillID) * 2.5), 15);
-			g.setColor(new Color(90, 15, 15));
-			g.setFont(new Font("Serif", 0, 12));
-			g.drawString(s.skillName + ": " + skills.getPercentToNextLevel(s.skillID)
-					+ "% to level " + (skills.getRealLevel(s.skillID) + 1)
-					+ " (Gained: " + (skills.getCurrentExp(s.skillID) - startExp[s.index]) + ")", x1 + 6, y1 + 13);
-			g.setColor(new Color(255, 255, 255, 90));
-			g.drawString(s.skillName + ": " + skills.getPercentToNextLevel(s.skillID)
-					+ "% to level " + (skills.getRealLevel(s.skillID) + 1) + ")", x1 + 7, y1 + 14);
-		}
-	}
+    private void drawSkillBars(Graphics g) {
+        for (Skill s : Skill.values()) {
+            int x1 = s.index <= 4 ? 20 : 180;
+            int y1 = s.index <= 4 ? 360 + (s.index * 20) : 360 + ((s.index - 4) * 20);
+            g.setColor(new Color(90, 15, 15, 100));
+            g.drawRect(x1, y1, 250, 15);
+            g.setColor(new Color(0, 0, 0, 50));
+            g.fillRect(x1, y1, (int) (skills.getPercentToNextLevel(s.skillID) * 2.5), 15);
+            g.setColor(new Color(90, 15, 15));
+            g.setFont(new Font("Serif", 0, 12));
+            g.drawString(s.skillName + ": " + skills.getPercentToNextLevel(s.skillID)
+                    + "% to level " + (skills.getRealLevel(s.skillID) + 1)
+                    + " (Gained: " + (skills.getCurrentExp(s.skillID) - startExp[s.index]) + ")", x1 + 6, y1 + 13);
+            g.setColor(new Color(255, 255, 255, 90));
+            g.drawString(s.skillName + ": " + skills.getPercentToNextLevel(s.skillID)
+                    + "% to level " + (skills.getRealLevel(s.skillID) + 1) + ")", x1 + 7, y1 + 14);
+        }
+    }
 
 	public void mouseClicked(MouseEvent e) {
 		if (hideRect.contains(e.getPoint())) {
@@ -921,7 +920,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 					if (dungeon) {
 						try {
 							if (calc.distanceTo(new RSTile(987, 4502)) >= 6) {
-								walking.walkPathMM(centerDung);
+								walkPathMM(centerDung);
 								sleep(random(600, 700));
 							}
 						} catch (Exception e) {
@@ -941,7 +940,7 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 						blueDragon.doAction("Attack");
 						sleep();
 					} else {
-						camera.turnToTile(blueDragon.getLocation());
+						camera.turnTo(blueDragon.getLocation());
 					}
 				} else {
 					camera.moveRandomly(30);
@@ -956,7 +955,118 @@ public class OwnageBDK extends Script implements PaintListener, MessageListener,
 		}
 	}
 
-	public void mousePressed(MouseEvent e) {
+    /**
+     * Walks towards the end of a path. This method should be looped.
+     *
+     * @param path The path to walk along.
+     * @return <tt>true</tt> if the next tile was reached; otherwise
+     *         <tt>false</tt>.
+     * @see #walkPathMM(RSTile[], int)
+     */
+    public boolean walkPathMM(final RSTile[] path) {
+        return walkPathMM(path, 16);
+    }
+
+    /**
+     * Walks towards the end of a path. This method should be looped.
+     *
+     * @param path    The path to walk along.
+     * @param maxDist See {@link #nextTile(RSTile[], int)}.
+     * @return <tt>true</tt> if the next tile was reached; otherwise
+     *         <tt>false</tt>.
+     * @see #walkPathMM(RSTile[], int, int)
+     */
+    public boolean walkPathMM(final RSTile[] path, final int maxDist) {
+        return walkPathMM(path, maxDist, 1, 1);
+    }
+
+    /**
+     * Walks towards the end of a path. This method should be looped.
+     *
+     * @param path  The path to walk along.
+     * @param randX The X value to randomize each tile in the path by.
+     * @param randY The Y value to randomize each tile in the path by.
+     * @return <tt>true</tt> if the next tile was reached; otherwise
+     *         <tt>false</tt>.
+     * @see #walkPathMM(RSTile[], int, int, int)
+     */
+    public boolean walkPathMM(final RSTile[] path, final int randX, final int randY) {
+        return walkPathMM(path, 16, randX, randY);
+    }
+
+    /**
+     * Walks towards the end of a path. This method should be looped.
+     *
+     * @param path    The path to walk along.
+     * @param maxDist See {@link #nextTile(RSTile[], int)}.
+     * @param randX   The X value to randomize each tile in the path by.
+     * @param randY   The Y value to randomize each tile in the path by.
+     * @return <tt>true</tt> if the next tile was reached; otherwise
+     *         <tt>false</tt>.
+     */
+    public boolean walkPathMM(final RSTile[] path, final int maxDist, final int randX, final int randY) {
+        try {
+            final RSTile next = nextTile(path, maxDist);
+            return next != null && walking.walkTileMM(next, randX, randY);
+        } catch (final Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the next tile to walk to on a path.
+     *
+     * @param path The path.
+     * @return The next <tt>RSTile</tt> to walk to on the provided path; or
+     *         <code>null</code> if far from path or at destination.
+     * @see #nextTile(RSTile[], int)
+     */
+    public RSTile nextTile(final RSTile path[]) {
+        return nextTile(path, 17);
+    }
+
+    /**
+     * Returns the next tile to walk to in a path.
+     *
+     * @param path     The path.
+     * @param skipDist If the distance to the tile after the next in the path is less
+     *                 than or equal to this distance, the tile after next will be
+     *                 returned rather than the next tile, skipping one. This
+     *                 interlacing aids continuous walking.
+     * @return The next <tt>RSTile</tt> to walk to on the provided path; or
+     *         <code>null</code> if far from path or at destination.
+     */
+    public RSTile nextTile(final RSTile path[], final int skipDist) {
+        int dist = 99;
+        int closest = -1;
+        for (int i = path.length - 1; i >= 0; i--) {
+            final RSTile tile = path[i];
+            final int d = calc.distanceTo(tile);
+            if (d < dist) {
+                dist = d;
+                closest = i;
+            }
+        }
+
+        int feasibleTileIndex = -1;
+
+        for (int i = closest; i < path.length; i++) {
+
+            if (calc.distanceTo(path[i]) <= skipDist) {
+                feasibleTileIndex = i;
+            } else {
+                break;
+            }
+        }
+
+        if (feasibleTileIndex == -1) {
+            return null;
+        } else {
+            return path[feasibleTileIndex];
+        }
+    }
+
+    public void mousePressed(MouseEvent e) {
 	}
 
 	public void mouseReleased(MouseEvent e) {
