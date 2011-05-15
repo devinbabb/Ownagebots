@@ -532,10 +532,110 @@ public class OwnageGDK extends Script implements MessageListener, PaintListener 
 
 	private boolean walkPath(RSTile[] path) {
 		if (!getMyPlayer().isMoving() || calc.distanceTo(walking.getDestination()) <= 1) {
-			return walking.walkPathMM(path);
+			return walkPathMM(path);
 		}
 		return false;
 	}
+
+    /**
+         * Walks towards the end of a path. This method should be looped.
+         *
+         * @param path The path to walk along.
+         * @return <tt>true</tt> if the next tile was reached; otherwise
+         *         <tt>false</tt>.
+         * @see #walkPathMM(RSTile[], int)
+         */
+        public boolean walkPathMM(final RSTile[] path) {
+            return walkPathMM(path, 16);
+        }
+
+        /**
+         * Walks towards the end of a path. This method should be looped.
+         *
+         * @param path    The path to walk along.
+         * @param maxDist See {@link #nextTile(RSTile[], int)}.
+         * @return <tt>true</tt> if the next tile was reached; otherwise
+         *         <tt>false</tt>.
+         * @see #walkPathMM(RSTile[], int, int)
+         */
+        public boolean walkPathMM(final RSTile[] path, final int maxDist) {
+            return walkPathMM(path, maxDist, 1, 1);
+        }
+
+        /**
+         * Walks towards the end of a path. This method should be looped.
+         *
+         * @param path  The path to walk along.
+         * @param randX The X value to randomize each tile in the path by.
+         * @param randY The Y value to randomize each tile in the path by.
+         * @return <tt>true</tt> if the next tile was reached; otherwise
+         *         <tt>false</tt>.
+         * @see #walkPathMM(RSTile[], int, int, int)
+         */
+        public boolean walkPathMM(final RSTile[] path, final int randX, final int randY) {
+            return walkPathMM(path, 16, randX, randY);
+        }
+
+        /**
+         * Walks towards the end of a path. This method should be looped.
+         *
+         * @param path    The path to walk along.
+         * @param maxDist See {@link #nextTile(RSTile[], int)}.
+         * @param randX   The X value to randomize each tile in the path by.
+         * @param randY   The Y value to randomize each tile in the path by.
+         * @return <tt>true</tt> if the next tile was reached; otherwise
+         *         <tt>false</tt>.
+         */
+        public boolean walkPathMM(final RSTile[] path, final int maxDist, final int randX, final int randY) {
+            try {
+                final RSTile next = nextTile(path, maxDist);
+                return next != null && walking.walkTileMM(next, randX, randY);
+            } catch (final Exception e) {
+                return false;
+            }
+        }
+
+        /**
+         * Returns the next tile to walk to in a path.
+         *
+         * @param path     The path.
+         * @param skipDist If the distance to the tile after the next in the path is less
+         *                 than or equal to this distance, the tile after next will be
+         *                 returned rather than the next tile, skipping one. This
+         *                 interlacing aids continuous walking.
+         * @return The next <tt>RSTile</tt> to walk to on the provided path; or
+         *         <code>null</code> if far from path or at destination.
+         */
+        public RSTile nextTile(final RSTile path[], final int skipDist) {
+            int dist = 99;
+            int closest = -1;
+            for (int i = path.length - 1; i >= 0; i--) {
+                final RSTile tile = path[i];
+                final int d = calc.distanceTo(tile);
+                if (d < dist) {
+                    dist = d;
+                    closest = i;
+                }
+            }
+
+            int feasibleTileIndex = -1;
+
+            for (int i = closest; i < path.length; i++) {
+
+                if (calc.distanceTo(path[i]) <= skipDist) {
+                    feasibleTileIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            if (feasibleTileIndex == -1) {
+                return null;
+            } else {
+                return path[feasibleTileIndex];
+            }
+        }
+
 
 	public void onRepaint(Graphics g) {
 		if (game.isLoggedIn()) {
